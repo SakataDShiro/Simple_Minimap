@@ -1,0 +1,62 @@
+{
+    "Version": null,
+    "Sections": [
+        {
+            "Name": "UI Settings",
+            "Description": "",
+            "IsAdvanced": false,
+            "Keys": [
+                {
+                    "Options": [
+                        "Bottom Left",
+                        "Bottom Center",
+                        "Bottom Right",
+                        "Top Left",
+                        "Top Center",
+                        "Top Right"
+                    ],
+                    "Value": 2,
+                    "Name": "Position",
+                    "Description": "Where to place the minimap on the screen",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.MultipleChoiceKey"
+                },
+                {
+                    "Value": true,
+                    "Name": "Rotation",
+                    "Description": "Allow the map to rotate",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": true,
+                    "Name": "Integrated Compass",
+                    "Description": "Replaces the in-game compass with a compass integrated into the minimap",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                }
+            ],
+            "$version": "v1"
+        },
+        {
+            "Name": "Map View",
+            "Description": "",
+            "IsAdvanced": false,
+            "Keys": [
+                {
+                    "Options": [
+                        "Near",
+                        "Normal",
+                        "Far"
+                    ],
+                    "Value": 1,
+                    "Name": "Distance Covered",
+                    "Description": "The distance the map covers",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.MultipleChoiceKey"
+                }
+            ],
+            "$version": "v1"
+        }       
+    ]
+}
