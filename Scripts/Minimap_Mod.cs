@@ -17,11 +17,16 @@ public class Minimap_Mod : MonoBehaviour
     public static int shortestSide = Mathf.Min(Screen.width, Screen.height);
     public static int textureWidthGUI = (int)(shortestSide * minimapSizePercent); // Render Texture Width
     public static int textureHeightGUI = textureWidthGUI; // Render Texture Height
+    public static int xAdded = 0;
+    public static int yAdded = 0;
     public float height = 50f; // Camera Height
     public static bool allowRotationMap; //Allow Rotation
     public static bool allowCompass; //Allow Compass
+    public static bool allowIndoorMinimap; //Allow Indoor
     public static int actualMinimapShape; //Minimap Shape
-
+    public static int distanceCoveredInsideOption;//Selected Option
+    public static int distanceCoveredOutsideOption;//Selected Option
+    public static float transparency = 1.0f; // Transparency
     //---------------------------------GUI VARIABLES---------------------------------------
     private Rect minimapRect;
     private Rect arrowRect;
@@ -36,7 +41,7 @@ public class Minimap_Mod : MonoBehaviour
     private Transform player; // Player reference
     public Camera miniMapCamera; // Minimap Camera
     private PlayerEnterExit playerEnterExit; // PlayerEnterExit component
-    private bool playerInside;
+    private bool renderMap;
 
 //---------------------------------------INVOKE-------------------------------------------------
     [Invoke(StateManager.StateTypes.Game, 0)]
@@ -62,26 +67,39 @@ public class Minimap_Mod : MonoBehaviour
         //-------------------- Check if Settings has changed---------------------------
         if (change.HasChanged("UI Settings") || change.HasChanged("Map View"))
         {
+            
             int minimapPosition = settings.GetValue<int>("UI Settings", "Position");
+            int minimapXOffset = settings.GetValue<int>("UI Settings", "X Offset");
+            int minimapYOffset = settings.GetValue<int>("UI Settings", "Y Offset");
+            float minimapTransparency = settings.GetValue<float>("UI Settings", "Transparency");
             bool rotationMap = settings.GetValue<bool>("UI Settings", "Rotation");
             bool compassMap = settings.GetValue<bool>("UI Settings", "Integrated Compass");
-            int distanceCovered = settings.GetValue<int>("Map View", "Distance Covered");
-            ApplySettings(minimapPosition, rotationMap, compassMap, distanceCovered);
+            int distanceCoveredOutside = settings.GetValue<int>("Map View", "Distance Covered Outside");
+            int distanceCoveredInside = settings.GetValue<int>("Map View", "Distance Covered Inside");
+            bool indoorMinimap = settings.GetValue<bool>("Map View", "Indoor Minimap");
+            ApplySettings(minimapPosition, minimapXOffset,minimapYOffset, minimapTransparency, rotationMap, compassMap, distanceCoveredOutside, distanceCoveredInside, indoorMinimap);
         }
     }
 
-    private void ApplySettings(int minimapPosition, bool rotationMap, bool compassMap, int distanceCovered)
+    private void ApplySettings(int minimapPosition, int minimapXOffset, int minimapYOffset, float minimapTransparency, bool rotationMap, bool compassMap, int distanceCoveredOutside, int distanceCoveredInside, bool indoorMinimap)
     {
         //-------------------------------Variables References------------------------------------------------------
         
         DaggerfallHUD daggerfallHUD = DaggerfallUI.Instance.DaggerfallHUD; //To modify some HUD
         allowRotationMap = rotationMap; //Load Rotation Map Config
         allowCompass = compassMap; //Load Compass Map Config
-        
+        allowIndoorMinimap = indoorMinimap;
 
-        //-----------------------------GUI VARIABLES----------------------------------------------------------------------
-        Vector2 arrowSize = new Vector2(25, 25);
+        //---------------------Camera------------------------
+        distanceCoveredInsideOption = distanceCoveredInside;
+        distanceCoveredOutsideOption = distanceCoveredOutside;
 
+        //---------------------Offset---------------------------
+        xAdded = minimapXOffset;
+        yAdded = minimapYOffset;
+        //---------------------------------Transparency-----------------------------
+        transparency = minimapTransparency;
+       
         //--------------------------------------------MINIMAP POSITIONS--------------------------------------------------
         
         //-------------Variables-----------------------------
@@ -89,53 +107,53 @@ public class Minimap_Mod : MonoBehaviour
         if (minimapPosition == 0) // BottomLeft
         {
             
-            minimapRect.x = Screen.width * 0.01f;
-            minimapRect.y = Screen.height * 0.80f - textureHeightGUI;
+            minimapRect.x = Screen.width * 0.01f + xAdded;
+            minimapRect.y = Screen.height * 0.80f - textureHeightGUI +yAdded;
         }
         else if (minimapPosition == 1) // BottomCenter
         {
 
-            minimapRect.x = (Screen.width * 0.5f) - (textureWidthGUI * 0.5f);
-            minimapRect.y = Screen.height * 0.97f - textureHeightGUI;
+            minimapRect.x = (Screen.width * 0.5f) - (textureWidthGUI * 0.5f) + xAdded;
+            minimapRect.y = Screen.height * 0.97f - textureHeightGUI + yAdded;
         }
         else if (minimapPosition == 2) // BottomRight
         {
-            minimapRect.x = Screen.width - textureWidthGUI - 10;
-            
+            minimapRect.x = Screen.width - textureWidthGUI - 10 + xAdded;
+            minimapRect.y = minimapRect.y + yAdded; 
 
             if (allowCompass== true) //Move to the compass position
             {
          
-                minimapRect.x = Screen.width * 0.97f - textureWidthGUI;
-                minimapRect.y = Screen.height * 0.97f - textureHeightGUI;
+                minimapRect.x = Screen.width * 0.97f - textureWidthGUI + xAdded;
+                minimapRect.y = Screen.height * 0.97f - textureHeightGUI + yAdded;
             }
             else
             {
-                minimapRect.x = Screen.width * 0.97f - textureWidthGUI;
-                minimapRect.y = Screen.height * 0.90f - textureHeightGUI;
+                minimapRect.x = Screen.width * 0.97f - textureWidthGUI + xAdded;
+                minimapRect.y = Screen.height * 0.90f - textureHeightGUI + yAdded;
             }
         }
         else if (minimapPosition == 3) // TopLeft
         {
-            minimapRect.x = Screen.width * 0.01f;
-            minimapRect.y = Screen.height * 0.42f - textureHeightGUI;
+            minimapRect.x = Screen.width * 0.01f + xAdded;
+            minimapRect.y = Screen.height * 0.42f - textureHeightGUI + yAdded;
         }
         else if (minimapPosition == 4) // TopCenter
         {
-            minimapRect.x = (Screen.width * 0.5f) - (textureWidthGUI * 0.5f);
-            minimapRect.y = Screen.height * 0.03f ;
+            minimapRect.x = (Screen.width * 0.5f) - (textureWidthGUI * 0.5f) + xAdded;
+            minimapRect.y = Screen.height * 0.03f + yAdded;
         }
         else if (minimapPosition == 5) // TopRight
         {
             if (allowCompass == true) //Move to the Compass Position
             {
-                minimapRect.x = Screen.width * 0.97f - textureWidthGUI;
-                minimapRect.y = Screen.height * 0.03f;
+                minimapRect.x = Screen.width * 0.97f - textureWidthGUI + xAdded;
+                minimapRect.y = Screen.height * 0.03f + yAdded;
             }
             else
             {
-                minimapRect.x = Screen.width * 0.97f -textureWidthGUI;
-                minimapRect.y = Screen.height * 0.10f;
+                minimapRect.x = Screen.width * 0.97f -textureWidthGUI + xAdded;
+                minimapRect.y = Screen.height * 0.10f + yAdded;
             }
         }
 
@@ -151,28 +169,7 @@ public class Minimap_Mod : MonoBehaviour
             daggerfallHUD.ShowCompass = true;
         }
 
-        //----------------------------CAMERA--------------------------------
-        GameObject miniMapCamera = GameObject.Find("MiniMapCamera"); //Get camera GameObject
-        Camera miniMapCam = miniMapCamera.GetComponent<Camera>(); //Get camera component
-        if (distanceCovered == 0)
-        {
-            miniMapCam.orthographicSize = 35;
-            arrowSize = new Vector2(18, 18);
-
-        }
-
-        else if (distanceCovered == 1)
-        {
-            miniMapCam.orthographicSize = 50;
-            arrowSize = new Vector2(15, 15);
-        }
-
-        else if (distanceCovered == 2)
-        {
-            miniMapCam.orthographicSize = 60;
-            arrowSize = new Vector2(10, 10);
-        }
-        arrowRect = new Rect(minimapRect.x + minimapRect.width / 2 - arrowSize.x / 2, minimapRect.y + minimapRect.height / 2 - arrowSize.y / 2, arrowSize.x, arrowSize.y);
+        
 
     }
 
@@ -199,6 +196,90 @@ public class Minimap_Mod : MonoBehaviour
             var changes = new ModSettingsChange();
             instance.LoadSettings(settings, changes);
         }
+    }
+
+    public void setDistanceCovered(int distanceCoveredOutsideOption, int distanceCoveredInsideOption)
+    {
+
+        GameObject miniMapCamera = GameObject.Find("MiniMapCamera"); //Get camera GameObject
+        Camera miniMapCam = miniMapCamera.GetComponent<Camera>(); //Get camera component
+
+        //-----------------------------GUI VARIABLES----------------------------------------------------------------------
+        Vector2 arrowSize = new Vector2(25, 25);
+
+        
+        if (playerEnterExit.IsPlayerInside == false)
+        {
+            height = 50f;
+            if (distanceCoveredOutsideOption == 0)
+            {
+                miniMapCam.orthographicSize = 25;
+                arrowSize = new Vector2(20, 20);
+
+            }
+
+            else if (distanceCoveredOutsideOption == 1)
+            {
+                miniMapCam.orthographicSize = 35;
+                arrowSize = new Vector2(18, 18);
+            }
+
+            else if (distanceCoveredOutsideOption == 2)
+            {
+                miniMapCam.orthographicSize = 50;
+                arrowSize = new Vector2(15, 15);
+            }
+
+            else if (distanceCoveredOutsideOption == 3)
+            {
+                miniMapCam.orthographicSize = 60;
+                arrowSize = new Vector2(8, 8);
+            }
+
+            else if (distanceCoveredOutsideOption == 4)
+            {
+                miniMapCam.orthographicSize = 80;
+                arrowSize = new Vector2(5, 5);
+            }
+
+        }
+        else
+        {
+            height = 0f;
+            if (distanceCoveredInsideOption == 0)
+            {
+                miniMapCam.orthographicSize = 20;
+                arrowSize = new Vector2(10, 10);
+
+            }
+
+            else if (distanceCoveredInsideOption == 1)
+            {
+                miniMapCam.orthographicSize = 25;
+                arrowSize = new Vector2(8, 8);
+            }
+
+            else if (distanceCoveredInsideOption == 2)
+            {
+                miniMapCam.orthographicSize = 30;
+                arrowSize = new Vector2(6, 6);
+
+            }
+
+            else if (distanceCoveredOutsideOption == 3)
+            {
+                miniMapCam.orthographicSize = 35;
+                arrowSize = new Vector2(4, 4);
+            }
+
+            else if (distanceCoveredOutsideOption == 4)
+            {
+                miniMapCam.orthographicSize = 40;
+                arrowSize = new Vector2(2, 2);
+            }
+        }
+        //Correct arrowSize
+        arrowRect = new Rect(minimapRect.x + minimapRect.width / 2 - arrowSize.x / 2, minimapRect.y + minimapRect.height / 2 - arrowSize.y / 2, arrowSize.x, arrowSize.y);
     }
 
     void Start()
@@ -261,16 +342,27 @@ public class Minimap_Mod : MonoBehaviour
 
         //------------------------------Limitation Area---------------------------------------------
 
-        if (playerEnterExit && playerEnterExit.IsPlayerInside == false)
+        if (playerEnterExit.IsPlayerInside == true)
         {
-            miniMapCamera.enabled = true;
-            playerInside = false;
+            if (allowIndoorMinimap == true)
+            {
+                miniMapCamera.enabled = true;
+                renderMap = true;
+                setDistanceCovered(distanceCoveredOutsideOption, distanceCoveredInsideOption);
+            }
+            else
+            {
+                miniMapCamera.enabled = false;
+                renderMap = false;
+
+            }
 
         }
         else
         {
-            miniMapCamera.enabled = false;
-            playerInside = true;
+            miniMapCamera.enabled = true;
+            renderMap = true;
+            setDistanceCovered(distanceCoveredOutsideOption, distanceCoveredInsideOption);
         }
     }
 
@@ -278,10 +370,18 @@ public class Minimap_Mod : MonoBehaviour
     {
         GUI.depth = 0;
 
-        // Guardar la matriz original
+        // Save Original Matrix
         Matrix4x4 matrixBackup = GUI.matrix;
 
-        if (playerInside == false) { 
+        
+
+        //Save Original Color
+        Color originalColor = GUI.color;
+
+        //Set Transparency
+        GUI.color = new Color(GUI.color.r, GUI.color.g, GUI.color.b, transparency);
+
+        if (renderMap == true) { 
                       
            GUI.DrawTexture(minimapRect, miniMapCamera.targetTexture, ScaleMode.StretchToFill);
 
@@ -300,7 +400,7 @@ public class Minimap_Mod : MonoBehaviour
             GUI.DrawTexture(arrowRect, arrowTexture, ScaleMode.StretchToFill);
             GUI.matrix = matrixBackup;
         }
+        GUI.color = originalColor;
     }
-
 
 }
