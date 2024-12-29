@@ -22,6 +22,33 @@
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.MultipleChoiceKey"
                 },
                 {
+                    "Min": -200,
+                    "Max": 200,
+                    "Value": 0,
+                    "Name": "X Offset",
+                    "Description": "Moves the X axis value over the selected position",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.SliderIntKey"
+                },
+                {
+                    "Min": -200,
+                    "Max": 200,
+                    "Value": 0,
+                    "Name": "Y Offset",
+                    "Description": "Moves the Y axis value over the selected position",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.SliderIntKey"
+                },
+                {
+                    "Min": 0.0,
+                    "Max": 1.0,
+                    "Value": 1.0,
+                    "Name": "Transparency",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.SliderFloatKey"
+                },
+                {
                     "Value": true,
                     "Name": "Rotation",
                     "Description": "Allow the map to rotate",
@@ -45,15 +72,38 @@
             "Keys": [
                 {
                     "Options": [
+                        "Too Near",
                         "Near",
                         "Normal",
-                        "Far"
+                        "Far",
+                        "Too Far"
                     ],
                     "Value": 1,
-                    "Name": "Distance Covered",
-                    "Description": "The distance the map covers",
+                    "Name": "Distance Covered Outside",
+                    "Description": "The distance the map covers outside",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.MultipleChoiceKey"
+                },
+                {
+                    "Options": [
+                        "Too Near",
+                        "Near",
+                        "Normal",
+                        "Far",
+                        "Too Far"
+                    ],
+                    "Value": 1,
+                    "Name": "Distance Covered Inside",
+                    "Description": "The distance the map covers inside (Indoor Minimap must be activated)",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.MultipleChoiceKey"
+                },
+                {
+                    "Value": true,
+                    "Name": "Indoor Minimap",
+                    "Description": "Enable the minimap on interiors and dungeons",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
                 }
             ],
             "$version": "v1"
