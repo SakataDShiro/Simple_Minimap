@@ -6,6 +6,7 @@ using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Utility.ModSupport;
 using DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings;
 using DaggerfallWorkshop.Game.UserInterfaceWindows;
+using MinimapLocatorMod;
 
 public class Minimap_Mod : MonoBehaviour
 {
@@ -43,7 +44,10 @@ public class Minimap_Mod : MonoBehaviour
     private PlayerEnterExit playerEnterExit; // PlayerEnterExit component
     private bool renderMap;
 
-//---------------------------------------INVOKE-------------------------------------------------
+    //---------------------------------New Scripts----------------------------------
+    
+
+    //---------------------------------------INVOKE-------------------------------------------------
     [Invoke(StateManager.StateTypes.Game, 0)]
     public static void Init(InitParams initParams)
     {
@@ -55,11 +59,19 @@ public class Minimap_Mod : MonoBehaviour
             {
                 instance.LoadSettings(settings, change);
             }
+
+            var locatorMod = FindObjectOfType<MinimapLocator>();
+            if (locatorMod != null)
+            {
+                locatorMod.LoadSettings(settings, change);
+            }
+
         };
         mod.LoadSettings(); //Load Settings
 
         var go = new GameObject(mod.Title);
         go.AddComponent<Minimap_Mod>();//Add component to the GameObject
+        MinimapLocator minimapLocator = go.AddComponent<MinimapLocator>();
     }
 
     private void LoadSettings(ModSettings settings, ModSettingsChange change)
@@ -195,6 +207,12 @@ public class Minimap_Mod : MonoBehaviour
             var settings = mod.GetSettings();
             var changes = new ModSettingsChange();
             instance.LoadSettings(settings, changes);
+
+            var locatorMod = FindObjectOfType<MinimapLocator>();
+            if (locatorMod != null)
+            {
+                locatorMod.LoadSettings(settings, changes);
+            }
         }
     }
 

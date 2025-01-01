@@ -1,0 +1,381 @@
+using UnityEngine;
+using DaggerfallWorkshop;
+using DaggerfallWorkshop.Game;
+using DaggerfallWorkshop.Game.Utility.ModSupport;
+using DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings;
+using DaggerfallConnect;
+using DaggerfallConnect.Arena2;
+using System.Collections.Generic;
+using System.Collections;
+
+namespace MinimapLocatorMod
+{
+    public class MinimapLocator : MonoBehaviour
+    {
+        private static Mod mod;
+
+        //-------------------------BUILDING VARIABLES---------------------------------------
+        public DaggerfallRMBBlock[] blockArray; //Obtain city blocks
+        public BuildingDirectory buildingDirectory;//Info buildings of the city
+        public List<Vector3> buildingLocations = new List<Vector3>();//Array of static buildings in block
+
+        //------------------------------MARKER VARIABLES---------------------------------------
+        public int textureSize = 128; // Base Size of marker
+        public int markerScaleModifier = 0; //Modifier To add settings
+        public int markerScale; //Variable to move the size of the marker
+        public float markerBorder; //Variable to move the border size
+        public float markerBorderModifier; //Modifier to add settings
+
+        private List<GameObject> createdMarkers = new List<GameObject>(); // References of created markers
+
+        //---------------------------BUILDING COLOR VARIABLES---------------------------------
+        public Color alchemistColor = Color.yellow;
+        public Color armorerColor = Color.gray;
+        public Color houseForSaleColor = Color.black;
+        public Color bankColor = Color.white;
+        public Color booksellerColor = Color.yellow;
+        public Color clothingStoreColor = Color.yellow;
+        public Color gemStoreColor = Color.yellow;
+        public Color generalStoreColor = Color.yellow;
+        public Color guildHallColor = Color.blue;
+        public Color libraryColor = Color.yellow;
+        public Color palaceColor = Color.white;
+        public Color pawnShopColor = Color.yellow;
+        public Color tavernColor = Color.green;
+        public Color templeColor = Color.cyan;
+        public Color weaponSmithColor = Color.gray;
+
+        //---------------------------BUILDING BOOL VARIABLES---------------------------------
+        private bool allowAlchemist;
+        private bool allowArmorer;
+        private bool allowHouseForSale;
+        private bool allowBank;
+        private bool allowBookseller;
+        private bool allowClothingStore;
+        private bool allowGemStore;
+        private bool allowGeneralStore;
+        private bool allowGuildHall;
+        private bool allowLibrary;
+        private bool allowPalace;
+        private bool allowPawnShop;
+        private bool allowTavern;
+        private bool allowTemple;
+        private bool allowWeaponSmith;
+
+
+        //-----------------------------Player control variables--------------------------------------
+        private bool wasInsideBuilding = false; //Check if player is inside
+        private bool wasResting = false; // check if the player is resting
+        private bool isInLocationRect = false; //check if is in a locationRect 
+        private bool needsUpdateAfterTransition = false; //if is in a new location rect, but does not have detected markers
+        private DaggerfallLocation lastPlayerLocation = null;
+ 
+     public void LoadSettings(ModSettings settings, ModSettingsChange change)
+        {
+            //-------------------- Check if Settings has changed---------------------------
+            if (change.HasChanged("Allowed Building Markers"))
+            {
+                bool alchemist = settings.GetValue<bool>("Allowed Building Markers", "Alchemist");
+                bool armorer = settings.GetValue<bool>("Allowed Building Markers", "Armorer");
+                bool houseForSale = settings.GetValue<bool>("Allowed Building Markers", "House For Sale");
+                bool bank = settings.GetValue<bool>("Allowed Building Markers", "Bank");
+                bool bookseller = settings.GetValue<bool>("Allowed Building Markers", "Bookseller");
+                bool clothingStore = settings.GetValue<bool>("Allowed Building Markers", "Clothing Store");
+                bool gemStore = settings.GetValue<bool>("Allowed Building Markers", "Gem Store");
+                bool generalStore = settings.GetValue<bool>("Allowed Building Markers", "General Store");
+                bool guildHall = settings.GetValue<bool>("Allowed Building Markers", "Guild Hall");
+                bool library = settings.GetValue<bool>("Allowed Building Markers", "Library");
+                bool palace = settings.GetValue<bool>("Allowed Building Markers", "Palace");
+                bool pawnShop = settings.GetValue<bool>("Allowed Building Markers", "Pawn Shop");
+                bool tavern = settings.GetValue<bool>("Allowed Building Markers", "Tavern");
+                bool temple = settings.GetValue<bool>("Allowed Building Markers", "Temple");
+                bool weaponSmith = settings.GetValue<bool>("Allowed Building Markers", "Weapon Smith");
+                ApplySettings(alchemist, armorer, houseForSale, bank, bookseller, clothingStore, gemStore, generalStore, guildHall, library, palace, pawnShop, tavern, temple, weaponSmith);
+            }
+        }
+
+        private void ApplySettings(bool alchemist, bool armorer, bool houseForSale, bool bank, bool bookseller, bool clothingStore, bool gemStore, bool generalStore, bool guildHall, bool library, bool palace, bool pawnShop, bool tavern, bool temple, bool weaponSmith)
+        {
+            allowAlchemist = alchemist;
+            allowArmorer = armorer;
+            allowHouseForSale = houseForSale;
+            allowBank = bank;
+            allowBookseller = bookseller;
+            allowClothingStore = clothingStore;
+            allowGemStore = gemStore;
+            allowGeneralStore = generalStore;
+            allowGuildHall = guildHall;
+            allowLibrary = library;
+            allowPalace = palace;
+            allowPawnShop = pawnShop;
+            allowTavern = tavern;
+            allowTemple = temple;
+            allowWeaponSmith = weaponSmith;
+            UpdateMarkers();
+    }
+
+        private void Start()
+        {
+            UpdateMarkers(); //Update the markers
+        }
+
+        void UpdateMarkers()
+        {
+            markerScale = 10 + markerScaleModifier; //Decide the size of the markers
+            markerBorder = 12f + markerBorderModifier;
+            ClearMarkers();            // Eliminate the previous markers
+            ReinitializeCityData();            // Recolect the data
+
+            // Locate and render the buildings allowed
+            if (allowAlchemist == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.Alchemist, alchemistColor);
+            }
+            if (allowArmorer == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.Armorer, armorerColor);
+            }
+            if (allowHouseForSale == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.HouseForSale, houseForSaleColor);
+            }
+            if (allowBank == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.Bank, bankColor);
+            }
+            if (allowBookseller == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.Bookseller, booksellerColor);
+            }
+            if (allowClothingStore == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.ClothingStore, clothingStoreColor);
+            }
+            if (allowGemStore == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.GemStore, gemStoreColor);
+            }
+            if (allowGeneralStore == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.GeneralStore, generalStoreColor);
+            }
+            if (allowGuildHall == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.GuildHall, guildHallColor);
+            }
+            if (allowLibrary == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.Library, libraryColor);
+            }
+            if (allowPalace == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.Palace, palaceColor);
+            }
+            if (allowPawnShop == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.PawnShop, pawnShopColor);
+            }
+            if (allowTavern == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.Tavern, tavernColor);
+            }
+            if(allowTemple == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.Temple, templeColor);
+            }
+            if (allowWeaponSmith == true)
+            {
+                LocateBuildings(DFLocation.BuildingTypes.WeaponSmith, weaponSmithColor);
+            }
+
+        }
+
+        void ReinitializeCityData()
+        {
+            buildingLocations.Clear(); // Clear previous data
+            if (GameManager.Instance.StreamingWorld.CurrentPlayerLocationObject != null) //check the current location
+            {
+                blockArray = GameManager.Instance.StreamingWorld.CurrentPlayerLocationObject.GetComponentsInChildren<DaggerfallRMBBlock>(); //New block
+                buildingDirectory = GameManager.Instance.StreamingWorld.CurrentPlayerLocationObject.GetComponentInChildren<BuildingDirectory>(); //new buildings
+                Debug.Log("DATA LOADED");
+            }
+            else
+            {
+                blockArray = null;
+                buildingDirectory = null;
+                Debug.Log("NO DATA");
+            }
+        }
+
+
+        void LocateBuildings(DFLocation.BuildingTypes buildingType, Color buildingColor)
+        {
+            if (blockArray != null && buildingDirectory != null) //if is valid the info
+            {
+                foreach (DaggerfallRMBBlock block in blockArray) //for each block
+                {
+                    StaticBuilding[] staticBuildings = block.GetComponentInChildren<DaggerfallStaticBuildings>().Buildings;
+
+                    foreach (StaticBuilding building in staticBuildings) //check the buildings
+                    {
+                        BuildingSummary buildingSummary;
+                        buildingDirectory.GetBuildingSummary(building.buildingKey, out buildingSummary);
+
+                        if (buildingSummary.BuildingType == buildingType) //filter per building type
+                        {
+                            Vector3 buildingPosition = block.transform.position + buildingSummary.Position;
+                            buildingLocations.Add(buildingPosition); //add to the list of buildings checked
+                            Debug.Log(buildingType + " found at: " + buildingPosition);
+                        }
+                    }
+                }
+                RenderBuildingMarkers(buildingType, buildingColor);
+                buildingLocations.Clear(); // Clear previous data
+            }
+        }
+
+        void RenderBuildingMarkers(DFLocation.BuildingTypes buildingType, Color buildingColor)
+        {
+            Texture2D circleTexture = CreateCircleTexture(textureSize, buildingColor, Color.clear); //create the texture
+
+            foreach (Vector3 position in buildingLocations) //for each building finded
+            {
+                float markerHeight = position.y + 40;
+
+                GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Quad); //create a marker
+                marker.transform.position = new Vector3(position.x, markerHeight, position.z); // Locate the marker over the building
+                marker.transform.localScale = new Vector3(markerScale, markerScale, markerScale); // Adjust the size of the marker
+                marker.transform.rotation = Quaternion.Euler(90, 0, 0); // The marker always facing up
+                marker.GetComponent<Renderer>().material.mainTexture = circleTexture;
+                marker.GetComponent<Renderer>().material.shader = Shader.Find("Unlit/Transparent"); //put shader
+
+                marker.name = buildingType.ToString() + "_Marker";// Name the marker
+                createdMarkers.Add(marker); //add marker to the list of marker created
+            }
+        }
+
+        void ClearMarkers()
+        {
+            foreach (GameObject marker in createdMarkers) //Eliminate marker created
+            {
+                Destroy(marker);
+            }
+            createdMarkers.Clear(); // Clean list of markers
+        }
+
+        Texture2D CreateCircleTexture(int size, Color circleColor, Color backgroundColor)
+        {
+            Texture2D texture = new Texture2D(size, size);
+            float radius = size / 2f;
+            float squaredRadius = radius * radius;
+            float squaredInnerRadius = (radius - markerBorder) * (radius - markerBorder);
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x - radius;
+                    float dy = y - radius;
+                    float distanceSquared = dx * dx + dy * dy;
+
+                    if (distanceSquared <= squaredRadius)
+                    {
+                        if (distanceSquared >= squaredInnerRadius)
+                        {
+                            texture.SetPixel(x, y, Color.black); // Color del borde
+                        }
+                        else
+                        {
+                            texture.SetPixel(x, y, circleColor); // Color del círculo
+                        }
+                    }
+                    else
+                    {
+                        texture.SetPixel(x, y, backgroundColor); // Color del fondo
+                    }
+                }
+            }
+
+            texture.Apply();
+            return texture;
+        }
+
+        private void Update()
+        {
+            PlayerGPS playerGPS = GameManager.Instance.PlayerGPS;
+            bool isInsideBuilding = GameManager.Instance.IsPlayerInside;
+            bool isResting = GameManager.Instance.PlayerEntity.IsResting;
+
+            
+
+            // Update if when player is resting
+            if (isResting != wasResting)
+            {
+                wasResting = isResting;
+                if (!isResting)
+                {
+                    UpdateMarkers();
+                }
+            }
+
+            // Update when enter-exit a building
+            if (isInsideBuilding != wasInsideBuilding)
+            {
+                wasInsideBuilding = isInsideBuilding;
+                if (isInsideBuilding)
+                {
+                    ClearMarkers(); // Clean markers when enter
+                }
+                else if (isInLocationRect)
+                {
+                    UpdateMarkers(); // Update if is on location when exit
+                }
+            }
+
+            // Detect if player is inside a location (Logic of Trancisions)
+            if (playerGPS.IsPlayerInLocationRect != isInLocationRect)
+            {
+                isInLocationRect = playerGPS.IsPlayerInLocationRect;
+                if (isInLocationRect)
+                {
+                    if (GameManager.Instance.StreamingWorld.CurrentPlayerLocationObject == null) //Check if CurrentPlaterLocationObject is null
+                    {
+                        needsUpdateAfterTransition = true; // If is null, needsUpdate
+                    }
+                    else
+                    {
+                        UpdateMarkers(); // If not, update.
+                    }
+                }
+                else
+                {
+                    ClearMarkers(); // Clean after leaving location
+                    
+                }
+            }
+
+            if (needsUpdateAfterTransition && GameManager.Instance.StreamingWorld.CurrentPlayerLocationObject != null && isInLocationRect)
+            {
+                UpdateMarkers();
+                needsUpdateAfterTransition = false;
+            }
+
+            //Logic of fast travel, check if the last CurrentPlayerLocationObject is the same
+            if (GameManager.Instance.StreamingWorld.CurrentPlayerLocationObject != lastPlayerLocation)
+            {
+                lastPlayerLocation = GameManager.Instance.StreamingWorld.CurrentPlayerLocationObject;
+                ClearMarkers();
+                StartCoroutine(WaitForCoordinatesAndUpdateMarkers());
+            }
+
+        }
+
+        private IEnumerator WaitForCoordinatesAndUpdateMarkers()
+        {
+            yield return new WaitForSeconds(1f); // Wait for 1 second to allow coordinates to stabilize
+            UpdateMarkers();
+        }
+
+    }
+
+}
