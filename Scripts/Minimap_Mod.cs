@@ -14,7 +14,7 @@ public class Minimap_Mod : MonoBehaviour
 
     //----------------------------------Minimap Variables------------------------------------
   
-    public static float minimapSizePercent = 0.23f;
+    public static float minimapSizePercent = 0.23f; //Minimap Size
     public static int shortestSide = Mathf.Min(Screen.width, Screen.height);
     public static int textureWidthGUI = (int)(shortestSide * minimapSizePercent); // Render Texture Width
     public static int textureHeightGUI = textureWidthGUI; // Render Texture Height
@@ -28,14 +28,46 @@ public class Minimap_Mod : MonoBehaviour
     public static int distanceCoveredInsideOption;//Selected Option
     public static int distanceCoveredOutsideOption;//Selected Option
     public static float transparency = 1.0f; // Transparency
+
     //---------------------------------GUI VARIABLES---------------------------------------
-    private Rect minimapRect;
-    private Rect arrowRect;
-    private Rect compassRect;
+    public static int depthModifier; //GUI Modifier to other interfaces
+
+    private Rect minimapRect; // Size and position
+    private Rect arrowRect;// Size and position
+    private Rect markerRect;// Size and position
+    private Rect compassRect;// Size and position
 
     private static Texture2D arrowTexture;
     private static Texture2D compassTexture;
     private float compassRotation;
+
+    private Dictionary<string, bool> markerVisibility = new Dictionary<string, bool>() //To Show Nearest Markers
+        {
+            { "Alchemist", false },
+            { "Armorer", false },
+            { "HouseForSale", false },
+            { "Bank", false },
+            { "Bookseller", false },
+            { "ClothingStore", false },
+            { "GemStore", false },
+            { "GeneralStore", false },
+            { "GuildHall", false },
+            { "Library", false },
+            { "Palace", false },
+            { "PawnShop", false },
+            { "Tavern", false },
+            { "Temple", false },
+            { "WeaponSmith", false }
+        };
+
+
+    private Dictionary<string, Vector3> closestMarkerPositions = new Dictionary<string, Vector3>(); //Vector to get closest marker of each on dictionary
+    private Dictionary<string, Texture2D> closestMarkerTextures = new Dictionary<string, Texture2D>(); //to get the textures of each
+    private Dictionary<string, float> closestMarkerRotations = new Dictionary<string, float>(); //to define rotation of each
+    private float minDistanceToHideMarker; // Distance to hide marker
+    private float fadeDistance; // Distance to start hiding with fade
+    private Vector3 closestMarkerPosition; //The position of each
+    private Texture2D closestMarkerTexture; //The texture of each
 
 
     //----------------------------------References----------------------------------------------
@@ -43,9 +75,6 @@ public class Minimap_Mod : MonoBehaviour
     public Camera miniMapCamera; // Minimap Camera
     private PlayerEnterExit playerEnterExit; // PlayerEnterExit component
     private bool renderMap;
-
-    //---------------------------------New Scripts----------------------------------
-    
 
     //---------------------------------------INVOKE-------------------------------------------------
     [Invoke(StateManager.StateTypes.Game, 0)]
@@ -77,26 +106,55 @@ public class Minimap_Mod : MonoBehaviour
     private void LoadSettings(ModSettings settings, ModSettingsChange change)
     {
         //-------------------- Check if Settings has changed---------------------------
-        if (change.HasChanged("UI Settings") || change.HasChanged("Map View"))
+        if (change.HasChanged("UI Settings") || change.HasChanged("Map View") || change.HasChanged("Building Markers"))
         {
             
             int minimapPosition = settings.GetValue<int>("UI Settings", "Position");
             int minimapXOffset = settings.GetValue<int>("UI Settings", "X Offset");
             int minimapYOffset = settings.GetValue<int>("UI Settings", "Y Offset");
             float minimapTransparency = settings.GetValue<float>("UI Settings", "Transparency");
+            int depthSelected = settings.GetValue<int>("UI Settings", "GUI Depth Modifier");
             bool rotationMap = settings.GetValue<bool>("UI Settings", "Rotation");
             bool compassMap = settings.GetValue<bool>("UI Settings", "Integrated Compass");
+
             int distanceCoveredOutside = settings.GetValue<int>("Map View", "Distance Covered Outside");
             int distanceCoveredInside = settings.GetValue<int>("Map View", "Distance Covered Inside");
             bool indoorMinimap = settings.GetValue<bool>("Map View", "Indoor Minimap");
-            ApplySettings(minimapPosition, minimapXOffset,minimapYOffset, minimapTransparency, rotationMap, compassMap, distanceCoveredOutside, distanceCoveredInside, indoorMinimap);
+
+            bool showNearAlchemist = settings.GetValue<bool>("Building Markers", "Show Nearest Alchemist Building");
+            bool showNearArmorer = settings.GetValue<bool>("Building Markers", "Show Nearest Armorer Building");
+            bool showNearHouseForSale = settings.GetValue<bool>("Building Markers", "Show Nearest House For Sale Building");
+            bool showNearBank = settings.GetValue<bool>("Building Markers", "Show Nearest Bank Building");
+            bool showNearBookseller = settings.GetValue<bool>("Building Markers", "Show Nearest Bookseller Building");
+            bool showNearClothingStore = settings.GetValue<bool>("Building Markers", "Show Nearest Clothing Store Building");
+            bool showNearGemStore = settings.GetValue<bool>("Building Markers", "Show Nearest Gem Store Building");
+            bool showNearGeneralStore = settings.GetValue<bool>("Building Markers", "Show Nearest General Store Building");
+            bool showNearGuildHall = settings.GetValue<bool>("Building Markers", "Show Nearest Guild Hall Building");
+            bool showNearLibrary = settings.GetValue<bool>("Building Markers", "Show Nearest Library Building");
+            bool showNearPalace = settings.GetValue<bool>("Building Markers", "Show Nearest Palace Building");
+            bool showNearPawnShop = settings.GetValue<bool>("Building Markers", "Show Nearest Pawn Shop Building");
+            bool showNearTavern = settings.GetValue<bool>("Building Markers", "Show Nearest Tavern Building");
+            bool showNearTemple = settings.GetValue<bool>("Building Markers", "Show Nearest Temple Building");
+            bool showNearWeaponSmith = settings.GetValue<bool>("Building Markers", "Show Nearest Weapon Smith Building");
+
+
+
+            ApplySettings(minimapPosition, minimapXOffset, minimapYOffset, minimapTransparency, depthSelected, rotationMap, compassMap, distanceCoveredOutside, distanceCoveredInside, indoorMinimap,
+              showNearAlchemist, showNearArmorer, showNearHouseForSale, showNearBank, showNearBookseller, showNearClothingStore,
+              showNearGemStore, showNearGeneralStore, showNearGuildHall, showNearLibrary, showNearPalace, showNearPawnShop,
+              showNearTavern, showNearTemple, showNearWeaponSmith);
+
         }
     }
 
-    private void ApplySettings(int minimapPosition, int minimapXOffset, int minimapYOffset, float minimapTransparency, bool rotationMap, bool compassMap, int distanceCoveredOutside, int distanceCoveredInside, bool indoorMinimap)
+    private void ApplySettings(int minimapPosition, int minimapXOffset, int minimapYOffset, float minimapTransparency, int depthSelected, bool rotationMap, bool compassMap,
+                            int distanceCoveredOutside, int distanceCoveredInside, bool indoorMinimap,
+                           bool showNearAlchemist, bool showNearArmorer, bool showNearHouseForSale, bool showNearBank, bool showNearBookseller, bool showNearClothingStore,
+                           bool showNearGemStore, bool showNearGeneralStore, bool showNearGuildHall, bool showNearLibrary, bool showNearPalace, bool showNearPawnShop,
+                           bool showNearTavern, bool showNearTemple, bool showNearWeaponSmith)
     {
         //-------------------------------Variables References------------------------------------------------------
-        
+
         DaggerfallHUD daggerfallHUD = DaggerfallUI.Instance.DaggerfallHUD; //To modify some HUD
         allowRotationMap = rotationMap; //Load Rotation Map Config
         allowCompass = compassMap; //Load Compass Map Config
@@ -111,11 +169,32 @@ public class Minimap_Mod : MonoBehaviour
         yAdded = minimapYOffset;
         //---------------------------------Transparency-----------------------------
         transparency = minimapTransparency;
-       
+
+        //----------------------------GUI DEPTH-------------------------------------
+        depthModifier = depthSelected;
+
+        //----------------------------------------MARKER VISIBILITY------------------------------
+        markerVisibility = new Dictionary<string, bool>()
+            {
+                { "Alchemist", showNearAlchemist },
+                { "Armorer", showNearArmorer },
+                { "HouseForSale", showNearHouseForSale },
+                { "Bank", showNearBank },
+                { "Bookseller", showNearBookseller },
+                { "ClothingStore", showNearClothingStore },
+                { "GemStore", showNearGemStore },
+                { "GeneralStore", showNearGeneralStore },
+                { "GuildHall", showNearGuildHall },
+                { "Library", showNearLibrary },
+                { "Palace", showNearPalace },
+                { "PawnShop", showNearPawnShop },
+                { "Tavern", showNearTavern },
+                { "Temple", showNearTemple },
+                { "WeaponSmith", showNearWeaponSmith }
+            };
+
         //--------------------------------------------MINIMAP POSITIONS--------------------------------------------------
-        
-        //-------------Variables-----------------------------
-        
+         
         if (minimapPosition == 0) // BottomLeft
         {
             
@@ -169,8 +248,9 @@ public class Minimap_Mod : MonoBehaviour
             }
         }
 
-        compassRect = new Rect(minimapRect.x + minimapRect.width / 2 - 12.5f, minimapRect.y -10, 20, 20 );
-        
+        markerRect = new Rect(minimapRect.x + minimapRect.width / 2 - 12.5f, minimapRect.y -10, 7, 7 ); //Define rect of all markers
+        compassRect = new Rect(minimapRect.x + minimapRect.width / 2 - 12.5f, minimapRect.y - 10, 20, 20); //Define rect of compass
+
         if (allowCompass == true)
         {
             
@@ -180,8 +260,6 @@ public class Minimap_Mod : MonoBehaviour
         {
             daggerfallHUD.ShowCompass = true;
         }
-
-        
 
     }
 
@@ -199,6 +277,7 @@ public class Minimap_Mod : MonoBehaviour
             Debug.LogError("Failed to load compass texture.");
         }
     }
+
     public static void ReloadSettings()
     {
         var instance = FindObjectOfType<Minimap_Mod>();
@@ -233,31 +312,40 @@ public class Minimap_Mod : MonoBehaviour
             {
                 miniMapCam.orthographicSize = 25;
                 arrowSize = new Vector2(20, 20);
-
+                minDistanceToHideMarker = 45f;
+                fadeDistance = minDistanceToHideMarker * 1.15f;
             }
 
             else if (distanceCoveredOutsideOption == 1)
             {
                 miniMapCam.orthographicSize = 35;
                 arrowSize = new Vector2(18, 18);
+                minDistanceToHideMarker = 55f;
+                fadeDistance = minDistanceToHideMarker * 1.15f;
             }
 
             else if (distanceCoveredOutsideOption == 2)
             {
                 miniMapCam.orthographicSize = 50;
                 arrowSize = new Vector2(15, 15);
+                minDistanceToHideMarker = 70f;
+                fadeDistance = minDistanceToHideMarker * 1.15f;
             }
 
             else if (distanceCoveredOutsideOption == 3)
             {
                 miniMapCam.orthographicSize = 60;
                 arrowSize = new Vector2(8, 8);
+                minDistanceToHideMarker = 80f;
+                fadeDistance = minDistanceToHideMarker * 1.15f;
             }
 
             else if (distanceCoveredOutsideOption == 4)
             {
                 miniMapCam.orthographicSize = 80;
                 arrowSize = new Vector2(5, 5);
+                minDistanceToHideMarker = 100f;
+                fadeDistance = minDistanceToHideMarker * 1.15f;
             }
 
         }
@@ -300,6 +388,79 @@ public class Minimap_Mod : MonoBehaviour
         arrowRect = new Rect(minimapRect.x + minimapRect.width / 2 - arrowSize.x / 2, minimapRect.y + minimapRect.height / 2 - arrowSize.y / 2, arrowSize.x, arrowSize.y);
     }
 
+    //----------------------------------------MARKERS---------------------------------------------------------
+
+    //To make rotationMarkers as compass
+    public void rotationMarker(Rect rect, Texture2D markerTexture, float markerRotation, Matrix4x4 matrixBackup)
+    {
+        GUIUtility.RotateAroundPivot(markerRotation, minimapRect.center); //Rotate around a virtual pivot, on this case MinimapRect.center
+        GUI.DrawTexture(rect, markerTexture, ScaleMode.StretchToFill); //Draw texture with rect, a texture and the scalemode
+        GUI.matrix = matrixBackup; //Get de matrix backup
+    }
+
+    public void FindNearMarker()
+    {
+        closestMarkerTextures.Clear(); //Clean the texture
+        closestMarkerPositions.Clear(); //Clean the position
+
+        foreach (var markerType in markerVisibility.Keys) //For each on dictionary read visibility
+        {
+            if (!markerVisibility[markerType])
+                continue;
+
+            GameObject closestMarker = null;
+            float closestDistanceSqr = Mathf.Infinity; //A infinite float distance
+            Vector3 playerPosition = player.position; 
+
+            GameObject[] markers = GameObject.FindObjectsOfType<GameObject>();
+
+            foreach (GameObject marker in markers) //when find all gameObjects
+            {
+                if (marker.name.Contains(markerType) && marker.name.EndsWith("_Marker")) //filter the ones with the name 
+                {
+                    Vector3 directionToMarker = marker.transform.position - playerPosition; //If is right, check his diference with player
+                    float dSqrToMarker = directionToMarker.sqrMagnitude; //magnitude of distance, the size of the vector
+
+                    if (dSqrToMarker < closestDistanceSqr) //Check if distance is lower than the lower distance registered
+                    {
+                        closestDistanceSqr = dSqrToMarker; //The initial distance registered is the lower
+                        closestMarker = marker; //When check all, the lower distance registered on all markers is the closest to player
+                    }
+                }
+            }
+
+            if (closestMarker != null)
+            {
+                Debug.Log($"{markerType} found at: {closestMarker.transform.position}");
+
+                Renderer markerRenderer = closestMarker.GetComponent<Renderer>();
+                if (markerRenderer != null && markerRenderer.material != null)
+                {
+                    Texture2D markerTexture = markerRenderer.material.mainTexture as Texture2D;
+                    if (markerTexture != null)
+                    {
+                        closestMarkerTextures[markerType] = markerTexture;
+                        Debug.Log($"Texture of {markerType} marker: {markerTexture.name}");
+                    }
+                    else
+                    {
+                        Debug.Log($"No Texture2D found on the marker's material.");
+                    }
+                }
+                else
+                {
+                    Debug.Log($"No Renderer or Material found on the marker.");
+                }
+
+                closestMarkerPositions[markerType] = closestMarker.transform.position;
+            }
+            else
+            {
+                Debug.Log($"No markers of type {markerType} found.");
+            }
+        }
+    }
+
     void Start()
     {
         LoadAssets(); //LOAD ALL ASSETS
@@ -325,8 +486,6 @@ public class Minimap_Mod : MonoBehaviour
 
         //---------------------------GUI START-------------------------------------
         minimapRect = new Rect(10, 10, textureHeightGUI, textureWidthGUI);
-        arrowRect = new Rect(minimapRect.x + minimapRect.width / 2 - 12.5f, minimapRect.y + minimapRect.height / 2 - 12.5f, 25, 25); //Half Height and Width Minimap To Center
-        compassRect = new Rect(minimapRect.x + minimapRect.width / 2 - 12.5f, minimapRect.y -10, 15, 15 ); //Center compass on top
 
         // Apply Settings
         ReloadSettings();
@@ -334,31 +493,22 @@ public class Minimap_Mod : MonoBehaviour
 
     void LateUpdate()
     {
-        //----------------------------Player Position----------------------------------------
-        Vector3 newPosition = player.position; //Get position
-        newPosition.y += height; //Get only Y
-        miniMapCamera.transform.position = newPosition; //Set Y position to camera
+        Vector3 newPosition = player.position;
+        newPosition.y += height;
+        miniMapCamera.transform.position = newPosition;
 
-        //------------------------------Rotation----------------------------------------------------------
-        float playerYRotation = player.eulerAngles.y; //Get player Rotation
+        float playerYRotation = player.eulerAngles.y;
 
         if (allowRotationMap == true)
         {
-            miniMapCamera.transform.rotation = Quaternion.Euler(90, player.eulerAngles.y, 0); //Set Camera Rotation to Player Rotation
-
-            //-----------------ON GUI--------------------------
+            miniMapCamera.transform.rotation = Quaternion.Euler(90, player.eulerAngles.y, 0);
             compassRotation = -playerYRotation;
-            
         }
-
-        else{
-            miniMapCamera.transform.rotation = Quaternion.Euler(90, 0, 0); //Set Map to Initial Position
-
-            //------------------ON GUI-----------------------------
+        else
+        {
+            miniMapCamera.transform.rotation = Quaternion.Euler(90, 0, 0);
             compassRotation = 0;
         }
-
-        //------------------------------Limitation Area---------------------------------------------
 
         if (playerEnterExit.IsPlayerInside == true)
         {
@@ -372,9 +522,7 @@ public class Minimap_Mod : MonoBehaviour
             {
                 miniMapCamera.enabled = false;
                 renderMap = false;
-
             }
-
         }
         else
         {
@@ -382,43 +530,99 @@ public class Minimap_Mod : MonoBehaviour
             renderMap = true;
             setDistanceCovered(distanceCoveredOutsideOption, distanceCoveredInsideOption);
         }
+
+        //--------------------------------------Marker---------------------------------------------------
+        FindNearMarker(); //Call all nearer markers
+
+        closestMarkerRotations.Clear(); //Clear marker rotation to continue refreshing it
+        foreach (var markerType in closestMarkerPositions.Keys) //For each markerType registered on the function
+        {
+            Vector3 directionToMarker = closestMarkerPositions[markerType] - player.position; //check his position diference
+            float angleToMarker = Mathf.Atan2(directionToMarker.x, directionToMarker.z) * Mathf.Rad2Deg; //check his angle
+            float markerRotation = angleToMarker - playerYRotation; //rest difference
+            closestMarkerRotations[markerType] = markerRotation; //define marker rotation of each marker type
+        }
     }
 
     void OnGUI()
     {
-        GUI.depth = 0;
+        GUI.depth = 0 + depthModifier; //To initial Markers
 
-        // Save Original Matrix
         Matrix4x4 matrixBackup = GUI.matrix;
-
-        
-
-        //Save Original Color
         Color originalColor = GUI.color;
-
-        //Set Transparency
         GUI.color = new Color(GUI.color.r, GUI.color.g, GUI.color.b, transparency);
 
-        if (renderMap == true) { 
-                      
-           GUI.DrawTexture(minimapRect, miniMapCamera.targetTexture, ScaleMode.StretchToFill);
+        if (renderMap == true)
+        {
+            GUI.DrawTexture(minimapRect, miniMapCamera.targetTexture, ScaleMode.StretchToFill);
 
+            // Draw Arrow
+            if (allowRotationMap == false)
+            {
+                GUIUtility.RotateAroundPivot(player.eulerAngles.y, minimapRect.center); //Not rotate map
+            }
+            GUI.DrawTexture(arrowRect, arrowTexture, ScaleMode.StretchToFill); //Rotate arrow
+
+            // Restor matrix
+            GUI.matrix = matrixBackup;
+
+            // Draw Markers
+            foreach (var markerType in closestMarkerTextures.Keys) //For each marker registered by update
+            {
+                if (markerVisibility[markerType]) //if is valid
+                {
+                    Vector3 markerPosition = closestMarkerPositions[markerType]; //define position
+                    float distanceToPlayer = Vector3.Distance(player.position, markerPosition); //diference to player position
+
+                    if (distanceToPlayer > minDistanceToHideMarker) //if is to close, do not render
+                    {
+                        // Calculate to vanish gradually
+                        float alpha = 1.0f;
+                        if (distanceToPlayer < fadeDistance) //Distance to fade
+                        {
+                            float t = (distanceToPlayer - minDistanceToHideMarker) / (fadeDistance - minDistanceToHideMarker); //an equation to calculate gradually the vanish when the player is closer
+                            alpha = Mathf.Pow(t, 3); // Cubic interpolation
+                        }
+
+
+                        GUI.color = new Color(GUI.color.r, GUI.color.g, GUI.color.b, alpha);// Move the alpha with the formula
+
+                        if (allowRotationMap == true)
+                        {
+                            rotationMarker(markerRect, closestMarkerTextures[markerType], closestMarkerRotations[markerType], matrixBackup); //Move markers
+                        }
+                        else
+                        {
+
+                            Vector3 directionToMarker = markerPosition - player.position; // Check direction of each marker
+                            float angleToMarker = Mathf.Atan2(directionToMarker.x, directionToMarker.z) * Mathf.Rad2Deg;// Check angle of each marker
+
+                            // Rotate the markers
+                            GUIUtility.RotateAroundPivot(angleToMarker, minimapRect.center);
+                            GUI.DrawTexture(markerRect, closestMarkerTextures[markerType], ScaleMode.StretchToFill);
+
+                            // Restore Matrix
+                            GUI.matrix = matrixBackup;
+                        }
+                    }
+                }
+            }
+
+            GUI.depth = -1 + depthModifier; //Draw compass over
+
+            GUI.color = originalColor; //Restore color
 
             if (allowCompass)
             {
-                GUIUtility.RotateAroundPivot(compassRotation, minimapRect.center);
-                GUI.DrawTexture(compassRect, compassTexture, ScaleMode.StretchToFill);
-                GUI.matrix = matrixBackup;
+                rotationMarker(compassRect, compassTexture, compassRotation, matrixBackup); //Draw compass
             }
 
-            if (allowRotationMap == false)
-            {
-                GUIUtility.RotateAroundPivot(player.eulerAngles.y, minimapRect.center);
-            }
-            GUI.DrawTexture(arrowRect, arrowTexture, ScaleMode.StretchToFill);
+            //To draw map under
+            GUI.depth = 0 + depthModifier;
+            // Restore matrix
             GUI.matrix = matrixBackup;
         }
-        GUI.color = originalColor;
     }
+
 
 }

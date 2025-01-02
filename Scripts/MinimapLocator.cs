@@ -21,29 +21,28 @@ namespace MinimapLocatorMod
 
         //------------------------------MARKER VARIABLES---------------------------------------
         public int textureSize = 128; // Base Size of marker
-        public int markerScaleModifier = 0; //Modifier To add settings
         public int markerScale; //Variable to move the size of the marker
         public float markerBorder; //Variable to move the border size
-        public float markerBorderModifier; //Modifier to add settings
 
         private List<GameObject> createdMarkers = new List<GameObject>(); // References of created markers
 
+
         //---------------------------BUILDING COLOR VARIABLES---------------------------------
-        public Color alchemistColor = Color.yellow;
-        public Color armorerColor = Color.gray;
-        public Color houseForSaleColor = Color.black;
-        public Color bankColor = Color.white;
-        public Color booksellerColor = Color.yellow;
-        public Color clothingStoreColor = Color.yellow;
-        public Color gemStoreColor = Color.yellow;
-        public Color generalStoreColor = Color.yellow;
-        public Color guildHallColor = Color.blue;
-        public Color libraryColor = Color.yellow;
-        public Color palaceColor = Color.white;
-        public Color pawnShopColor = Color.yellow;
-        public Color tavernColor = Color.green;
-        public Color templeColor = Color.cyan;
-        public Color weaponSmithColor = Color.gray;
+        public Color32 alchemistColor;
+        public Color32 armorerColor;
+        public Color32 houseForSaleColor;
+        public Color32 bankColor;
+        public Color32 booksellerColor;
+        public Color32 clothingStoreColor;
+        public Color32 gemStoreColor;
+        public Color32 generalStoreColor;
+        public Color32 guildHallColor;
+        public Color32 libraryColor;
+        public Color32 palaceColor;
+        public Color32 pawnShopColor;
+        public Color32 tavernColor;
+        public Color32 templeColor;
+        public Color32 weaponSmithColor;
 
         //---------------------------BUILDING BOOL VARIABLES---------------------------------
         private bool allowAlchemist;
@@ -73,29 +72,94 @@ namespace MinimapLocatorMod
      public void LoadSettings(ModSettings settings, ModSettingsChange change)
         {
             //-------------------- Check if Settings has changed---------------------------
-            if (change.HasChanged("Allowed Building Markers"))
+            if (change.HasChanged("Markers") || change.HasChanged("Building Markers"))
             {
-                bool alchemist = settings.GetValue<bool>("Allowed Building Markers", "Alchemist");
-                bool armorer = settings.GetValue<bool>("Allowed Building Markers", "Armorer");
-                bool houseForSale = settings.GetValue<bool>("Allowed Building Markers", "House For Sale");
-                bool bank = settings.GetValue<bool>("Allowed Building Markers", "Bank");
-                bool bookseller = settings.GetValue<bool>("Allowed Building Markers", "Bookseller");
-                bool clothingStore = settings.GetValue<bool>("Allowed Building Markers", "Clothing Store");
-                bool gemStore = settings.GetValue<bool>("Allowed Building Markers", "Gem Store");
-                bool generalStore = settings.GetValue<bool>("Allowed Building Markers", "General Store");
-                bool guildHall = settings.GetValue<bool>("Allowed Building Markers", "Guild Hall");
-                bool library = settings.GetValue<bool>("Allowed Building Markers", "Library");
-                bool palace = settings.GetValue<bool>("Allowed Building Markers", "Palace");
-                bool pawnShop = settings.GetValue<bool>("Allowed Building Markers", "Pawn Shop");
-                bool tavern = settings.GetValue<bool>("Allowed Building Markers", "Tavern");
-                bool temple = settings.GetValue<bool>("Allowed Building Markers", "Temple");
-                bool weaponSmith = settings.GetValue<bool>("Allowed Building Markers", "Weapon Smith");
-                ApplySettings(alchemist, armorer, houseForSale, bank, bookseller, clothingStore, gemStore, generalStore, guildHall, library, palace, pawnShop, tavern, temple, weaponSmith);
+                int markerSizeSetting = settings.GetValue<int>("Markers", "Marker Size");
+                float markerBorderSetting = settings.GetValue<float>("Markers", "Border Size");
+                
+
+                bool alchemist = settings.GetValue<bool>("Building Markers", "Alchemist");
+                bool armorer = settings.GetValue<bool>("Building Markers", "Armorer");
+                bool houseForSale = settings.GetValue<bool>("Building Markers", "House For Sale");
+                bool bank = settings.GetValue<bool>("Building Markers", "Bank");
+                bool bookseller = settings.GetValue<bool>("Building Markers", "Bookseller");
+                bool clothingStore = settings.GetValue<bool>("Building Markers", "Clothing Store");
+                bool gemStore = settings.GetValue<bool>("Building Markers", "Gem Store");
+                bool generalStore = settings.GetValue<bool>("Building Markers", "General Store");
+                bool guildHall = settings.GetValue<bool>("Building Markers", "Guild Hall");
+                bool library = settings.GetValue<bool>("Building Markers", "Library");
+                bool palace = settings.GetValue<bool>("Building Markers", "Palace");
+                bool pawnShop = settings.GetValue<bool>("Building Markers", "Pawn Shop");
+                bool tavern = settings.GetValue<bool>("Building Markers", "Tavern");
+                bool temple = settings.GetValue<bool>("Building Markers", "Temple");
+                bool weaponSmith = settings.GetValue<bool>("Building Markers", "Weapon Smith");
+
+
+
+                Color32 alchemistSelectedColor = settings.GetValue<Color32>("Building Markers", "Alchemist Marker Color");
+                Color32 armorerSelectedColor = settings.GetValue<Color32>("Building Markers", "Armorer Marker Color");
+                Color32 houseForSaleSelectedColor = settings.GetValue<Color32>("Building Markers", "House For Sale Marker Color");
+                Color32 bankSelectedColor = settings.GetValue<Color32>("Building Markers", "Bank Marker Color");
+                Color32 booksellerSelectedColor = settings.GetValue<Color32>("Building Markers", "Bookseller Marker Color");
+                Color32 clothingStoreSelectedColor = settings.GetValue<Color32>("Building Markers", "Clothing Store Marker Color");
+                Color32 gemStoreSelectedColor = settings.GetValue<Color32>("Building Markers", "Gem Store Marker Color");
+                Color32 generalStoreSelectedColor = settings.GetValue<Color32>("Building Markers", "General Store Marker Color");
+                Color32 guildHallSelectedColor = settings.GetValue<Color32>("Building Markers", "Guild Hall Marker Color");
+                Color32 librarySelectedColor = settings.GetValue<Color32>("Building Markers", "Library Marker Color");
+                Color32 palaceSelectedColor = settings.GetValue<Color32>("Building Markers", "Palace Marker Color");
+                Color32 pawnShopSelectedColor = settings.GetValue<Color32>("Building Markers", "Pawn Shop Marker Color");
+                Color32 tavernSelectedColor = settings.GetValue<Color32>("Building Markers", "Tavern Marker Color");
+                Color32 templeSelectedColor = settings.GetValue<Color32>("Building Markers", "Temple Marker Color");
+                Color32 weaponSmithSelectedColor = settings.GetValue<Color32>("Building Markers", "Weapon Smith Marker Color");
+
+
+
+                ApplySettings(
+                    markerSizeSetting,
+                    markerBorderSetting,
+                    alchemist, alchemistSelectedColor,
+                    armorer, armorerSelectedColor,
+                    houseForSale, houseForSaleSelectedColor,
+                    bank, bankSelectedColor,
+                    bookseller, booksellerSelectedColor,
+                    clothingStore, clothingStoreSelectedColor,
+                    gemStore, gemStoreSelectedColor,
+                    generalStore, generalStoreSelectedColor,
+                    guildHall, guildHallSelectedColor,
+                    library, librarySelectedColor,
+                    palace, palaceSelectedColor,
+                    pawnShop, pawnShopSelectedColor,
+                    tavern, tavernSelectedColor,
+                    temple, templeSelectedColor,
+                    weaponSmith, weaponSmithSelectedColor
+                );
             }
         }
 
-        private void ApplySettings(bool alchemist, bool armorer, bool houseForSale, bool bank, bool bookseller, bool clothingStore, bool gemStore, bool generalStore, bool guildHall, bool library, bool palace, bool pawnShop, bool tavern, bool temple, bool weaponSmith)
+        private void ApplySettings(
+            int markerSizeSetting,
+            float markerBorderSetting,
+            bool alchemist, Color32 alchemistSelectedColor,
+            bool armorer, Color32 armorerSelectedColor,
+            bool houseForSale, Color32 houseForSaleSelectedColor,
+            bool bank, Color32 bankSelectedColor,
+            bool bookseller, Color32 booksellerSelectedColor,
+            bool clothingStore, Color32 clothingStoreSelectedColor,
+            bool gemStore, Color32 gemStoreSelectedColor,
+            bool generalStore, Color32 generalStoreSelectedColor,
+            bool guildHall, Color32 guildHallSelectedColor,
+            bool library, Color32 librarySelectedColor,
+            bool palace, Color32 palaceSelectedColor,
+            bool pawnShop, Color32 pawnShopSelectedColor,
+            bool tavern, Color32 tavernSelectedColor,
+            bool temple, Color32 templeSelectedColor,
+            bool weaponSmith, Color32 weaponSmithSelectedColor
+        )
+        
         {
+            markerBorder = markerBorderSetting;
+            markerScale = 9 + markerSizeSetting;
+
             allowAlchemist = alchemist;
             allowArmorer = armorer;
             allowHouseForSale = houseForSale;
@@ -111,6 +175,23 @@ namespace MinimapLocatorMod
             allowTavern = tavern;
             allowTemple = temple;
             allowWeaponSmith = weaponSmith;
+
+            alchemistColor = alchemistSelectedColor;
+            armorerColor = armorerSelectedColor;
+            houseForSaleColor = houseForSaleSelectedColor;
+            bankColor = bankSelectedColor;
+            booksellerColor = booksellerSelectedColor;
+            clothingStoreColor = clothingStoreSelectedColor;
+            gemStoreColor = gemStoreSelectedColor;
+            generalStoreColor = generalStoreSelectedColor;
+            guildHallColor = guildHallSelectedColor;
+            libraryColor = librarySelectedColor;
+            palaceColor = palaceSelectedColor;
+            pawnShopColor = pawnShopSelectedColor;
+            tavernColor = tavernSelectedColor;
+            templeColor = templeSelectedColor;
+            weaponSmithColor = weaponSmithSelectedColor;
+
             UpdateMarkers();
     }
 
@@ -121,8 +202,6 @@ namespace MinimapLocatorMod
 
         void UpdateMarkers()
         {
-            markerScale = 10 + markerScaleModifier; //Decide the size of the markers
-            markerBorder = 12f + markerBorderModifier;
             ClearMarkers();            // Eliminate the previous markers
             ReinitializeCityData();            // Recolect the data
 
