@@ -2,13 +2,6 @@
     "Version": null,
     "Sections": [
         {
-            "Name": "-",
-            "Description": null,
-            "IsAdvanced": false,
-            "Keys": [],
-            "$version": "v1"
-        },
-        {
             "Name": "UI Settings",
             "Description": "",
             "IsAdvanced": false,
@@ -56,6 +49,15 @@
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.SliderFloatKey"
                 },
                 {
+                    "Min": -5,
+                    "Max": 0,
+                    "Value": 0,
+                    "Name": "GUI Depth Modifier",
+                    "Description": "A lower number renders the minimap first for use with other interfaces",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.SliderIntKey"
+                },
+                {
                     "Value": true,
                     "Name": "Rotation",
                     "Description": "Allow the map to rotate",
@@ -73,7 +75,7 @@
             "$version": "v1"
         },
         {
-            "Name": "--",
+            "Name": "-",
             "Description": null,
             "IsAdvanced": false,
             "Keys": [],
@@ -123,121 +125,446 @@
             "$version": "v1"
         },
         {
-            "Name": "---",
+            "Name": "--",
             "Description": null,
             "IsAdvanced": false,
             "Keys": [],
             "$version": "v1"
         },
         {
-            "Name": "Allowed Building Markers",
-            "Description": "List of building markers allowed to display on the minimap",
+            "Name": "Markers",
+            "Description": "Setting markers on the minimap",
+            "IsAdvanced": false,
+            "Keys": [
+                {
+                    "Min": 1,
+                    "Max": 5,
+                    "Value": 3,
+                    "Name": "Marker Size",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.SliderIntKey"
+                },
+                {
+                    "Min": 0,
+                    "Max": 24,
+                    "Value": 12,
+                    "Name": "Border Size",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.SliderFloatKey"
+                }
+                
+            ],
+            "$version": "v1"
+        },
+        {
+            "Name": "Building Markers",
+            "Description": "List of building markers allowed to be displayed on the minimap and their color settings",
             "IsAdvanced": false,
             "Keys": [
                 {
                     "Value": true,
                     "Name": "Alchemist",
-                    "Description": "Yellow",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Alchemist Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": {
+                        "r": 255,
+                        "g": 0,
+                        "b": 0,
+                        "a": 255
+                    },
+                    "Name": "Alchemist Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Armorer",
-                    "Description": "Gray",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Armorer Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 128,
+                        "g": 128,
+                        "b": 128,
+                        "a": 255
+                    },
+                    "Name": "Armorer Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "House For Sale",
-                    "Description": "Black",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest House For Sale Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 0,
+                        "g": 0,
+                        "b": 0,
+                        "a": 255
+                    },
+                    "Name": "House For Sale Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Bank",
-                    "Description": "White",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Bank Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": {
+                        "r": 153,
+                        "g": 255,
+                        "b": 153,
+                        "a": 255
+                    },
+                    "Name": "Bank Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Bookseller",
-                    "Description": "Yellow",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Bookseller Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 82,
+                        "g": 51,
+                        "b": 12,
+                        "a": 255
+                    },
+                    "Name": "Bookseller Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Clothing Store",
-                    "Description": "Yellow",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Clothing Store Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 255,
+                        "g": 165,
+                        "b": 0,
+                        "a": 255
+                    },
+                    "Name": "Clothing Store Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Gem Store",
-                    "Description": "Yellow",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Gem Store Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 139,
+                        "g": 0,
+                        "b": 0,
+                        "a": 255
+                    },
+                    "Name": "Gem Store Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "General Store",
-                    "Description": "Yellow",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest General Store Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 0,
+                        "a": 255
+                    },
+                    "Name": "General Store Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Guild Hall",
-                    "Description": "Blue",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Guild Hall Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 69,
+                        "g": 69,
+                        "b": 170,
+                        "a": 255
+                    },
+                    "Name": "Guild Hall Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Library",
-                    "Description": "Yellow",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Library Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 167,
+                        "g": 119,
+                        "b": 54,
+                        "a": 255
+                    },
+                    "Name": "Library Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Palace",
-                    "Description": "White",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Palace Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255,
+                        "a": 255
+                    },
+                    "Name": "Palace Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Pawn Shop",
-                    "Description": "Yellow",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Pawn Shop Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 139,
+                        "g": 139,
+                        "b": 0,
+                        "a": 255
+                    },
+                    "Name": "Pawn Shop Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Tavern",
-                    "Description": "Green",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Tavern Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 0,
+                        "g": 100,
+                        "b": 0,
+                        "a": 255
+                    },
+                    "Name": "Tavern Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 },
                 {
                     "Value": true,
                     "Name": "Temple",
-                    "Description": "Cyan",
+                    "Description": "",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
                 },
                 {
-                    "Value": true,
-                    "Name": "Weapon Smith",
-                    "Description": "Gray",
+                    "Value": false,
+                    "Name": "Show Nearest Temple Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 0,
+                        "g": 255,
+                        "b": 255,
+                        "a": 255
+                    },
+                    "Name": "Temple Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
+                },
+                {
+                    "Value": true,
+                    "Name": "Weapon Smith",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": false,
+                    "Name": "Show Nearest Weapon Smith Building",
+                    "Description": "It allows you to see, as if it were the compass at the edge of the map, an icon of the color of the marker of the nearest building.",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+
+                {
+                    "Value": {
+                        "r": 64,
+                        "g": 64,
+                        "b": 64,
+                        "a": 255
+                    },
+                    "Name": "Weapon Smith Marker Color",
+                    "Description": "",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ColorKey"
                 }
             ],
             "$version": "v1"
