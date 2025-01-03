@@ -58,6 +58,20 @@
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.SliderIntKey"
                 },
                 {
+                    "Options": [
+                        "Too Low",
+                        "Low",
+                        "Normal",
+                        "High",
+                        "Too High"
+                    ],
+                    "Value": 2,
+                    "Name": "Update Frequency",
+                    "Description": "The higher the frequency, the higher the demand. If you have low FPS, have this option on Low",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.MultipleChoiceKey"
+                },
+                {
                     "Value": true,
                     "Name": "Rotation",
                     "Description": "Allow the map to rotate",
@@ -72,13 +86,6 @@
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
                 }
             ],
-            "$version": "v1"
-        },
-        {
-            "Name": "-",
-            "Description": null,
-            "IsAdvanced": false,
-            "Keys": [],
             "$version": "v1"
         },
         {
@@ -122,13 +129,6 @@
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
                 }
             ],
-            "$version": "v1"
-        },
-        {
-            "Name": "--",
-            "Description": null,
-            "IsAdvanced": false,
-            "Keys": [],
             "$version": "v1"
         },
         {
