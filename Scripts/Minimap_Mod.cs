@@ -28,6 +28,7 @@ public class Minimap_Mod : MonoBehaviour
     public static int distanceCoveredInsideOption;//Selected Option
     public static int distanceCoveredOutsideOption;//Selected Option
     public static float transparency = 1.0f; // Transparency
+    public static float updateFrequency = 0.08f; //Frequency
 
     //---------------------------------GUI VARIABLES---------------------------------------
     public static int depthModifier; //GUI Modifier to other interfaces
@@ -114,6 +115,7 @@ public class Minimap_Mod : MonoBehaviour
             int minimapYOffset = settings.GetValue<int>("UI Settings", "Y Offset");
             float minimapTransparency = settings.GetValue<float>("UI Settings", "Transparency");
             int depthSelected = settings.GetValue<int>("UI Settings", "GUI Depth Modifier");
+            int refreshUpdateSelected = settings.GetValue<int>("UI Settings", "Update Frequency");
             bool rotationMap = settings.GetValue<bool>("UI Settings", "Rotation");
             bool compassMap = settings.GetValue<bool>("UI Settings", "Integrated Compass");
 
@@ -139,7 +141,7 @@ public class Minimap_Mod : MonoBehaviour
 
 
 
-            ApplySettings(minimapPosition, minimapXOffset, minimapYOffset, minimapTransparency, depthSelected, rotationMap, compassMap, distanceCoveredOutside, distanceCoveredInside, indoorMinimap,
+            ApplySettings(minimapPosition, minimapXOffset, minimapYOffset, minimapTransparency, depthSelected, refreshUpdateSelected, rotationMap, compassMap, distanceCoveredOutside, distanceCoveredInside, indoorMinimap,
               showNearAlchemist, showNearArmorer, showNearHouseForSale, showNearBank, showNearBookseller, showNearClothingStore,
               showNearGemStore, showNearGeneralStore, showNearGuildHall, showNearLibrary, showNearPalace, showNearPawnShop,
               showNearTavern, showNearTemple, showNearWeaponSmith);
@@ -147,7 +149,7 @@ public class Minimap_Mod : MonoBehaviour
         }
     }
 
-    private void ApplySettings(int minimapPosition, int minimapXOffset, int minimapYOffset, float minimapTransparency, int depthSelected, bool rotationMap, bool compassMap,
+    private void ApplySettings(int minimapPosition, int minimapXOffset, int minimapYOffset, float minimapTransparency, int depthSelected, int refreshUpdateSelected, bool rotationMap, bool compassMap,
                             int distanceCoveredOutside, int distanceCoveredInside, bool indoorMinimap,
                            bool showNearAlchemist, bool showNearArmorer, bool showNearHouseForSale, bool showNearBank, bool showNearBookseller, bool showNearClothingStore,
                            bool showNearGemStore, bool showNearGeneralStore, bool showNearGuildHall, bool showNearLibrary, bool showNearPalace, bool showNearPawnShop,
@@ -172,6 +174,27 @@ public class Minimap_Mod : MonoBehaviour
 
         //----------------------------GUI DEPTH-------------------------------------
         depthModifier = depthSelected;
+
+        //------------------------------Refresh Frequency-----------------------------
+        if(refreshUpdateSelected == 0)
+        {
+            updateFrequency = 0.1f;
+        }else if(refreshUpdateSelected == 1)
+        {
+            updateFrequency = 0.08f;
+        }else if(refreshUpdateSelected == 2){
+            updateFrequency = 0.05f;
+        }
+        else if (refreshUpdateSelected == 3)
+        {
+            updateFrequency = 0.02f;
+        }
+        else if (refreshUpdateSelected == 4)
+        {
+            updateFrequency = 0.008f;
+        }
+
+        AdjustUpdateInterval(updateFrequency);
 
         //----------------------------------------MARKER VISIBILITY------------------------------
         markerVisibility = new Dictionary<string, bool>()
@@ -262,6 +285,13 @@ public class Minimap_Mod : MonoBehaviour
         }
 
     }
+
+    void AdjustUpdateInterval(float newInterval)
+    {
+        CancelInvoke("UpdateMinimap"); // Stop Actual Update
+        InvokeRepeating("UpdateMinimap", 0f, newInterval); // New Update Rate
+    }
+
 
     private static void LoadAssets() 
     {
@@ -489,9 +519,11 @@ public class Minimap_Mod : MonoBehaviour
 
         // Apply Settings
         ReloadSettings();
+
+        AdjustUpdateInterval(updateFrequency);
     }
 
-    void LateUpdate()
+    void UpdateMinimap()
     {
         Vector3 newPosition = player.position;
         newPosition.y += height;
