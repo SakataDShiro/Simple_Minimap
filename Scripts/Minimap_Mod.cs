@@ -157,7 +157,7 @@ public class Minimap_Mod : MonoBehaviour
     {
         //-------------------------------Variables References------------------------------------------------------
 
-        DaggerfallHUD daggerfallHUD = DaggerfallUI.Instance.DaggerfallHUD; //To modify some HUD
+        
         allowRotationMap = rotationMap; //Load Rotation Map Config
         allowCompass = compassMap; //Load Compass Map Config
         allowIndoorMinimap = indoorMinimap;
@@ -178,20 +178,20 @@ public class Minimap_Mod : MonoBehaviour
         //------------------------------Refresh Frequency-----------------------------
         if(refreshUpdateSelected == 0)
         {
-            updateFrequency = 0.1f;
+            updateFrequency = 0.2f;
         }else if(refreshUpdateSelected == 1)
         {
-            updateFrequency = 0.08f;
+            updateFrequency = 0.1f;
         }else if(refreshUpdateSelected == 2){
-            updateFrequency = 0.05f;
+            updateFrequency = 0.06f;
         }
         else if (refreshUpdateSelected == 3)
         {
-            updateFrequency = 0.02f;
+            updateFrequency = 0.04f;
         }
         else if (refreshUpdateSelected == 4)
         {
-            updateFrequency = 0.008f;
+            updateFrequency = 0.03f;
         }
 
         AdjustUpdateInterval(updateFrequency);
@@ -273,16 +273,6 @@ public class Minimap_Mod : MonoBehaviour
 
         markerRect = new Rect(minimapRect.x + minimapRect.width / 2 - 12.5f, minimapRect.y -10, 7, 7 ); //Define rect of all markers
         compassRect = new Rect(minimapRect.x + minimapRect.width / 2 - 12.5f, minimapRect.y - 10, 20, 20); //Define rect of compass
-
-        if (allowCompass == true)
-        {
-            
-            daggerfallHUD.ShowCompass = false;
-        }
-        else
-        {
-            daggerfallHUD.ShowCompass = true;
-        }
 
     }
 
@@ -528,6 +518,7 @@ public class Minimap_Mod : MonoBehaviour
         Vector3 newPosition = player.position;
         newPosition.y += height;
         miniMapCamera.transform.position = newPosition;
+        DaggerfallHUD daggerfallHUD = DaggerfallUI.Instance.DaggerfallHUD; //To modify some HUD
 
         float playerYRotation = player.eulerAngles.y;
 
@@ -561,6 +552,30 @@ public class Minimap_Mod : MonoBehaviour
             miniMapCamera.enabled = true;
             renderMap = true;
             setDistanceCovered(distanceCoveredOutsideOption, distanceCoveredInsideOption);
+        }
+
+        if (allowCompass == true)
+        {
+            if (playerEnterExit.IsPlayerInside == true)
+                {
+                if (allowIndoorMinimap == false)
+                {
+                    daggerfallHUD.ShowCompass = true;
+                }
+                else
+                {
+                    daggerfallHUD.ShowCompass = false;
+                }
+            }
+            else
+            {
+                daggerfallHUD.ShowCompass = false;
+            }
+                
+        }
+        else
+        {
+            daggerfallHUD.ShowCompass = true;
         }
 
         //--------------------------------------Marker---------------------------------------------------

@@ -136,7 +136,7 @@ namespace MinimapLocatorMod
             }
         }
 
-        private void ApplySettings(
+            private void ApplySettings(
             int markerSizeSetting,
             float markerBorderSetting,
             bool alchemist, Color32 alchemistSelectedColor,
@@ -203,71 +203,82 @@ namespace MinimapLocatorMod
         void UpdateMarkers()
         {
             ClearMarkers();            // Eliminate the previous markers
-            ReinitializeCityData();            // Recolect the data
+            ReinitializeCityData();    // Recollect the data
+
+            if (blockArray == null)
+            {
+                Debug.LogError("blockArray is still null after reinitializing city data.");
+                return;
+            }
+            if (buildingDirectory == null)
+            {
+                Debug.LogError("buildingDirectory is still null after reinitializing city data.");
+                return;
+            }
 
             // Locate and render the buildings allowed
-            if (allowAlchemist == true)
+            if (allowAlchemist)
             {
                 LocateBuildings(DFLocation.BuildingTypes.Alchemist, alchemistColor);
             }
-            if (allowArmorer == true)
+            if (allowArmorer)
             {
                 LocateBuildings(DFLocation.BuildingTypes.Armorer, armorerColor);
             }
-            if (allowHouseForSale == true)
+            if (allowHouseForSale)
             {
                 LocateBuildings(DFLocation.BuildingTypes.HouseForSale, houseForSaleColor);
             }
-            if (allowBank == true)
+            if (allowBank)
             {
                 LocateBuildings(DFLocation.BuildingTypes.Bank, bankColor);
             }
-            if (allowBookseller == true)
+            if (allowBookseller)
             {
                 LocateBuildings(DFLocation.BuildingTypes.Bookseller, booksellerColor);
             }
-            if (allowClothingStore == true)
+            if (allowClothingStore)
             {
                 LocateBuildings(DFLocation.BuildingTypes.ClothingStore, clothingStoreColor);
             }
-            if (allowGemStore == true)
+            if (allowGemStore)
             {
                 LocateBuildings(DFLocation.BuildingTypes.GemStore, gemStoreColor);
             }
-            if (allowGeneralStore == true)
+            if (allowGeneralStore)
             {
                 LocateBuildings(DFLocation.BuildingTypes.GeneralStore, generalStoreColor);
             }
-            if (allowGuildHall == true)
+            if (allowGuildHall)
             {
                 LocateBuildings(DFLocation.BuildingTypes.GuildHall, guildHallColor);
             }
-            if (allowLibrary == true)
+            if (allowLibrary)
             {
                 LocateBuildings(DFLocation.BuildingTypes.Library, libraryColor);
             }
-            if (allowPalace == true)
+            if (allowPalace)
             {
                 LocateBuildings(DFLocation.BuildingTypes.Palace, palaceColor);
             }
-            if (allowPawnShop == true)
+            if (allowPawnShop)
             {
                 LocateBuildings(DFLocation.BuildingTypes.PawnShop, pawnShopColor);
             }
-            if (allowTavern == true)
+            if (allowTavern)
             {
                 LocateBuildings(DFLocation.BuildingTypes.Tavern, tavernColor);
             }
-            if(allowTemple == true)
+            if (allowTemple)
             {
                 LocateBuildings(DFLocation.BuildingTypes.Temple, templeColor);
             }
-            if (allowWeaponSmith == true)
+            if (allowWeaponSmith)
             {
                 LocateBuildings(DFLocation.BuildingTypes.WeaponSmith, weaponSmithColor);
             }
-
         }
+
 
         void ReinitializeCityData()
         {
@@ -293,23 +304,61 @@ namespace MinimapLocatorMod
             {
                 foreach (DaggerfallRMBBlock block in blockArray) //for each block
                 {
-                    StaticBuilding[] staticBuildings = block.GetComponentInChildren<DaggerfallStaticBuildings>().Buildings;
-
-                    foreach (StaticBuilding building in staticBuildings) //check the buildings
+                    if (block == null)
                     {
-                        BuildingSummary buildingSummary;
-                        buildingDirectory.GetBuildingSummary(building.buildingKey, out buildingSummary);
+                        Debug.LogError("Block is null in blockArray");
+                        continue;
+                    }
 
-                        if (buildingSummary.BuildingType == buildingType) //filter per building type
-                        {
-                            Vector3 buildingPosition = block.transform.position + buildingSummary.Position;
-                            buildingLocations.Add(buildingPosition); //add to the list of buildings checked
-                            Debug.Log(buildingType + " found at: " + buildingPosition);
-                        }
+                    var staticBuildingsComponent = block.GetComponentInChildren<DaggerfallStaticBuildings>();
+                    if (staticBuildingsComponent == null)
+                    {
+                        Debug.LogWarning("DaggerfallStaticBuildings component is null in block. Skipping this block.");
+                        continue;
+                    }
+
+                    StaticBuilding[] staticBuildings = staticBuildingsComponent.Buildings;
+                    if (staticBuildings == null)
+                    {
+                        Debug.Log("Static Buildings Is Null");
+                    }
+                    else
+                    {
+                        LocateStaticBuildings(staticBuildings, block, buildingType, buildingColor);
                     }
                 }
                 RenderBuildingMarkers(buildingType, buildingColor);
                 buildingLocations.Clear(); // Clear previous data
+            }
+            else
+            {
+                if (blockArray == null)
+                {
+                    Debug.Log("Block Array is Null");
+                }
+
+                if (buildingDirectory == null)
+                {
+                    Debug.Log("Building Directory is Null");
+                }
+            }
+        }
+
+
+
+        void LocateStaticBuildings(StaticBuilding[] staticBuildings, DaggerfallRMBBlock block, DFLocation.BuildingTypes buildingType, Color buildingColor)
+        {
+            foreach (StaticBuilding building in staticBuildings) //check the buildings
+            {
+                BuildingSummary buildingSummary;
+                buildingDirectory.GetBuildingSummary(building.buildingKey, out buildingSummary);
+
+                if (buildingSummary.BuildingType == buildingType) //filter per building type
+                {
+                    Vector3 buildingPosition = block.transform.position + buildingSummary.Position;
+                    buildingLocations.Add(buildingPosition); //add to the list of buildings checked
+                    Debug.Log(buildingType + " found at: " + buildingPosition);
+                }
             }
         }
 
@@ -450,6 +499,12 @@ namespace MinimapLocatorMod
         }
 
         private IEnumerator WaitForCoordinatesAndUpdateMarkers()
+        {
+            yield return new WaitForSeconds(1f); // Wait for 1 second to allow coordinates to stabilize
+            UpdateMarkers();
+        }
+
+        private IEnumerator WaitForBuildingsUpdate()
         {
             yield return new WaitForSeconds(1f); // Wait for 1 second to allow coordinates to stabilize
             UpdateMarkers();
