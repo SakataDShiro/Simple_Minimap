@@ -1,6 +1,6 @@
 {
     "ModTitle": "Simple Minimap",
-    "ModVersion": "1.3.1",
+    "ModVersion": "1.3.2",
     "ModAuthor": "Positronico",
     "DFUnity_Version": "1.1.1",
     "ModDescription": "Creates a minimap on the screen",
@@ -10,6 +10,7 @@
         "Assets/Game/Mods/Minimap/Textures/PlayerArrowGUI.png",
         "Assets/Game/Mods/Minimap/Textures/compassSpriteGUI.png",
         "Assets/Game/Mods/Minimap/Scripts/Minimap_Mod.cs",
-        "Assets/Game/Mods/Minimap/Scripts/MinimapLocator.cs"
+        "Assets/Game/Mods/Minimap/Scripts/MinimapLocator.cs",
+        "Assets/Game/Mods/Minimap/Minimap.dfmod.json"
     ]
 }
