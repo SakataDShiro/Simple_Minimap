@@ -14,6 +14,9 @@ namespace MinimapLocatorMod
     {
         private static Mod mod;
 
+        //----------------------------------UPDATE---------------------------------
+        public float updateFrequency = 0.1f;
+
         //-------------------------BUILDING VARIABLES---------------------------------------
         public DaggerfallRMBBlock[] blockArray; //Obtain city blocks
         public BuildingDirectory buildingDirectory;//Info buildings of the city
@@ -197,6 +200,7 @@ namespace MinimapLocatorMod
 
         private void Start()
         {
+            AdjustUpdateInterval(updateFrequency);
             UpdateMarkers(); //Update the markers
         }
 
@@ -428,7 +432,13 @@ namespace MinimapLocatorMod
             return texture;
         }
 
-        private void Update()
+        void AdjustUpdateInterval(float newInterval)
+        {
+            CancelInvoke("UpdateLocator"); // Stop Actual Update
+            InvokeRepeating("UpdateLocator", 0f, newInterval); // New Update Rate
+        }
+
+        void UpdateLocator()
         {
             PlayerGPS playerGPS = GameManager.Instance.PlayerGPS;
             bool isInsideBuilding = GameManager.Instance.IsPlayerInside;

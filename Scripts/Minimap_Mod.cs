@@ -6,6 +6,7 @@ using DaggerfallWorkshop.Game;
 using DaggerfallWorkshop.Game.Utility.ModSupport;
 using DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings;
 using DaggerfallWorkshop.Game.UserInterfaceWindows;
+using DaggerfallWorkshop.Game.Serialization;
 using MinimapLocatorMod;
 
 public class Minimap_Mod : MonoBehaviour
@@ -21,6 +22,7 @@ public class Minimap_Mod : MonoBehaviour
     public static int xAdded = 0;
     public static int yAdded = 0;
     public float height = 50f; // Camera Height
+    public float interiorHeight = 1f; //Interior camera height
     public static bool allowRotationMap; //Allow Rotation
     public static bool allowCompass; //Allow Compass
     public static bool allowIndoorMinimap; //Allow Indoor
@@ -29,6 +31,11 @@ public class Minimap_Mod : MonoBehaviour
     public static int distanceCoveredOutsideOption;//Selected Option
     public static float transparency = 1.0f; // Transparency
     public static float updateFrequency = 0.08f; //Frequency
+    public static KeyCode toggleKey;
+    public float farClipPlane = 5f; //Far clip
+
+    private RenderTexture previousRenderTexture; //Render Texture of Main Camera
+    private Camera mainCamera; //Main Camera
 
     //---------------------------------GUI VARIABLES---------------------------------------
     public static int depthModifier; //GUI Modifier to other interfaces
@@ -76,6 +83,7 @@ public class Minimap_Mod : MonoBehaviour
     public Camera miniMapCamera; // Minimap Camera
     private PlayerEnterExit playerEnterExit; // PlayerEnterExit component
     private bool renderMap;
+    private bool renderMapToggle = true;
 
     //---------------------------------------INVOKE-------------------------------------------------
     [Invoke(StateManager.StateTypes.Game, 0)]
@@ -118,6 +126,7 @@ public class Minimap_Mod : MonoBehaviour
             int refreshUpdateSelected = settings.GetValue<int>("UI Settings", "Update Frequency");
             bool rotationMap = settings.GetValue<bool>("UI Settings", "Rotation");
             bool compassMap = settings.GetValue<bool>("UI Settings", "Integrated Compass");
+            string keyInputString = settings.GetValue<string>("UI Settings", "KeyInput");
 
             int distanceCoveredOutside = settings.GetValue<int>("Map View", "Distance Covered Outside");
             int distanceCoveredInside = settings.GetValue<int>("Map View", "Distance Covered Inside");
@@ -141,7 +150,7 @@ public class Minimap_Mod : MonoBehaviour
 
 
 
-            ApplySettings(minimapPosition, minimapXOffset, minimapYOffset, minimapTransparency, depthSelected, refreshUpdateSelected, rotationMap, compassMap, distanceCoveredOutside, distanceCoveredInside, indoorMinimap,
+            ApplySettings(minimapPosition, minimapXOffset, minimapYOffset, minimapTransparency, depthSelected, refreshUpdateSelected, rotationMap, compassMap, keyInputString, distanceCoveredOutside, distanceCoveredInside, indoorMinimap,
               showNearAlchemist, showNearArmorer, showNearHouseForSale, showNearBank, showNearBookseller, showNearClothingStore,
               showNearGemStore, showNearGeneralStore, showNearGuildHall, showNearLibrary, showNearPalace, showNearPawnShop,
               showNearTavern, showNearTemple, showNearWeaponSmith);
@@ -149,7 +158,7 @@ public class Minimap_Mod : MonoBehaviour
         }
     }
 
-    private void ApplySettings(int minimapPosition, int minimapXOffset, int minimapYOffset, float minimapTransparency, int depthSelected, int refreshUpdateSelected, bool rotationMap, bool compassMap,
+    private void ApplySettings(int minimapPosition, int minimapXOffset, int minimapYOffset, float minimapTransparency, int depthSelected, int refreshUpdateSelected, bool rotationMap, bool compassMap, string keyInputString,
                             int distanceCoveredOutside, int distanceCoveredInside, bool indoorMinimap,
                            bool showNearAlchemist, bool showNearArmorer, bool showNearHouseForSale, bool showNearBank, bool showNearBookseller, bool showNearClothingStore,
                            bool showNearGemStore, bool showNearGeneralStore, bool showNearGuildHall, bool showNearLibrary, bool showNearPalace, bool showNearPawnShop,
@@ -216,8 +225,11 @@ public class Minimap_Mod : MonoBehaviour
                 { "WeaponSmith", showNearWeaponSmith }
             };
 
+        //---------------------------------------TOGGLE KEY-------------------------------
+        toggleKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), keyInputString);
+
         //--------------------------------------------MINIMAP POSITIONS--------------------------------------------------
-         
+
         if (minimapPosition == 0) // BottomLeft
         {
             
@@ -317,15 +329,26 @@ public class Minimap_Mod : MonoBehaviour
 
     public void setDistanceCovered(int distanceCoveredOutsideOption, int distanceCoveredInsideOption)
     {
-
         GameObject miniMapCamera = GameObject.Find("MiniMapCamera"); //Get camera GameObject
+
+        if (miniMapCamera == null)
+        {
+            Debug.LogError("Not found 'MiniMapCamera'.");
+            return;
+        }
+
         Camera miniMapCam = miniMapCamera.GetComponent<Camera>(); //Get camera component
+
+        if (miniMapCam == null)
+        {
+            Debug.LogError("GameObject 'MiniMapCamera' does not have 'Camera'.");
+            return;
+        }
 
         //-----------------------------GUI VARIABLES----------------------------------------------------------------------
         Vector2 arrowSize = new Vector2(25, 25);
 
-        
-        if (playerEnterExit.IsPlayerInside == false)
+        if (playerEnterExit != null && playerEnterExit.IsPlayerInside == false)
         {
             height = 50f;
             if (distanceCoveredOutsideOption == 0)
@@ -335,7 +358,6 @@ public class Minimap_Mod : MonoBehaviour
                 minDistanceToHideMarker = 45f;
                 fadeDistance = minDistanceToHideMarker * 1.15f;
             }
-
             else if (distanceCoveredOutsideOption == 1)
             {
                 miniMapCam.orthographicSize = 35;
@@ -343,7 +365,6 @@ public class Minimap_Mod : MonoBehaviour
                 minDistanceToHideMarker = 55f;
                 fadeDistance = minDistanceToHideMarker * 1.15f;
             }
-
             else if (distanceCoveredOutsideOption == 2)
             {
                 miniMapCam.orthographicSize = 50;
@@ -351,7 +372,6 @@ public class Minimap_Mod : MonoBehaviour
                 minDistanceToHideMarker = 70f;
                 fadeDistance = minDistanceToHideMarker * 1.15f;
             }
-
             else if (distanceCoveredOutsideOption == 3)
             {
                 miniMapCam.orthographicSize = 60;
@@ -359,7 +379,6 @@ public class Minimap_Mod : MonoBehaviour
                 minDistanceToHideMarker = 80f;
                 fadeDistance = minDistanceToHideMarker * 1.15f;
             }
-
             else if (distanceCoveredOutsideOption == 4)
             {
                 miniMapCam.orthographicSize = 80;
@@ -367,46 +386,52 @@ public class Minimap_Mod : MonoBehaviour
                 minDistanceToHideMarker = 100f;
                 fadeDistance = minDistanceToHideMarker * 1.15f;
             }
-
         }
-        else
+        else if (playerEnterExit != null && playerEnterExit.IsPlayerInside == true)
         {
-            height = 0f;
+            height = interiorHeight;
             if (distanceCoveredInsideOption == 0)
             {
                 miniMapCam.orthographicSize = 20;
                 arrowSize = new Vector2(10, 10);
-
             }
-
             else if (distanceCoveredInsideOption == 1)
             {
                 miniMapCam.orthographicSize = 25;
                 arrowSize = new Vector2(8, 8);
             }
-
             else if (distanceCoveredInsideOption == 2)
             {
                 miniMapCam.orthographicSize = 30;
                 arrowSize = new Vector2(6, 6);
-
             }
-
-            else if (distanceCoveredOutsideOption == 3)
+            else if (distanceCoveredInsideOption == 3)
             {
                 miniMapCam.orthographicSize = 35;
                 arrowSize = new Vector2(4, 4);
             }
-
-            else if (distanceCoveredOutsideOption == 4)
+            else if (distanceCoveredInsideOption == 4)
             {
                 miniMapCam.orthographicSize = 40;
                 arrowSize = new Vector2(2, 2);
             }
         }
+        else
+        {
+            Debug.LogError("playerEnterExit not initializated");
+        }
+
         //Correct arrowSize
-        arrowRect = new Rect(minimapRect.x + minimapRect.width / 2 - arrowSize.x / 2, minimapRect.y + minimapRect.height / 2 - arrowSize.y / 2, arrowSize.x, arrowSize.y);
+        if (minimapRect != null)
+        {
+            arrowRect = new Rect(minimapRect.x + minimapRect.width / 2 - arrowSize.x / 2, minimapRect.y + minimapRect.height / 2 - arrowSize.y / 2, arrowSize.x, arrowSize.y);
+        }
+        else
+        {
+            Debug.LogError("minimapRect not initializated.");
+        }
     }
+
 
     //----------------------------------------MARKERS---------------------------------------------------------
 
@@ -504,14 +529,34 @@ public class Minimap_Mod : MonoBehaviour
         renderTexture.Create();
         miniMapCamera.targetTexture = renderTexture; //Assign to CameraTarget
 
+        mainCamera = Camera.main;
+        previousRenderTexture = mainCamera.targetTexture;
+
         //---------------------------GUI START-------------------------------------
         minimapRect = new Rect(10, 10, textureHeightGUI, textureWidthGUI);
 
         // Apply Settings
         ReloadSettings();
 
+        StartCoroutine(CheckInput());
         AdjustUpdateInterval(updateFrequency);
     }
+
+    IEnumerator CheckInput()
+    {
+        while (true)
+        {
+            if (!GameManager.IsGamePaused && !SaveLoadManager.Instance.LoadInProgress)
+            {
+                if (InputManager.Instance.GetKeyDown(toggleKey, true))
+                {
+                    renderMapToggle = !renderMapToggle; // Toggle renderMap
+                }
+            }
+            yield return null;
+        }
+    }
+
 
     void UpdateMinimap()
     {
@@ -540,6 +585,7 @@ public class Minimap_Mod : MonoBehaviour
                 miniMapCamera.enabled = true;
                 renderMap = true;
                 setDistanceCovered(distanceCoveredOutsideOption, distanceCoveredInsideOption);
+                miniMapCamera.farClipPlane = farClipPlane;
             }
             else
             {
@@ -552,6 +598,7 @@ public class Minimap_Mod : MonoBehaviour
             miniMapCamera.enabled = true;
             renderMap = true;
             setDistanceCovered(distanceCoveredOutsideOption, distanceCoveredInsideOption);
+            miniMapCamera.farClipPlane = 1000;
         }
 
         if (allowCompass == true)
@@ -591,6 +638,36 @@ public class Minimap_Mod : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        if (mainCamera.targetTexture != previousRenderTexture)
+        {
+            previousRenderTexture = mainCamera.targetTexture;
+
+            GameObject minimapCamera = GameObject.Find("MiniMapCamera");
+
+            if (minimapCamera != null)
+            {
+                minimapCamera.SetActive(false);
+
+                // Reactivar después de un corto período de tiempo
+                StartCoroutine(ReactivarMinimapCamera(minimapCamera, 0.1f)); // 1.0f es el tiempo en segundos
+            }
+            else
+            {
+                Debug.LogWarning("Not found GameObject 'minimapCamera'.");
+            }
+        }
+    } //To check if the mode on effect has changed
+
+    IEnumerator ReactivarMinimapCamera(GameObject minimapCamera, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        minimapCamera.SetActive(true);
+    } //To check if the mode on effect has changed
+
+
+
     void OnGUI()
     {
         GUI.depth = 0 + depthModifier; //To initial Markers
@@ -599,75 +676,78 @@ public class Minimap_Mod : MonoBehaviour
         Color originalColor = GUI.color;
         GUI.color = new Color(GUI.color.r, GUI.color.g, GUI.color.b, transparency);
 
-        if (renderMap == true)
+        if (renderMapToggle == true)
         {
-            GUI.DrawTexture(minimapRect, miniMapCamera.targetTexture, ScaleMode.StretchToFill);
-
-            // Draw Arrow
-            if (allowRotationMap == false)
+            if (renderMap == true)
             {
-                GUIUtility.RotateAroundPivot(player.eulerAngles.y, minimapRect.center); //Not rotate map
-            }
-            GUI.DrawTexture(arrowRect, arrowTexture, ScaleMode.StretchToFill); //Rotate arrow
+                GUI.DrawTexture(minimapRect, miniMapCamera.targetTexture, ScaleMode.StretchToFill);
 
-            // Restor matrix
-            GUI.matrix = matrixBackup;
-
-            // Draw Markers
-            foreach (var markerType in closestMarkerTextures.Keys) //For each marker registered by update
-            {
-                if (markerVisibility[markerType]) //if is valid
+                // Draw Arrow
+                if (allowRotationMap == false)
                 {
-                    Vector3 markerPosition = closestMarkerPositions[markerType]; //define position
-                    float distanceToPlayer = Vector3.Distance(player.position, markerPosition); //diference to player position
+                    GUIUtility.RotateAroundPivot(player.eulerAngles.y, minimapRect.center); //Not rotate map
+                }
+                GUI.DrawTexture(arrowRect, arrowTexture, ScaleMode.StretchToFill); //Rotate arrow
 
-                    if (distanceToPlayer > minDistanceToHideMarker) //if is to close, do not render
+                // Restor matrix
+                GUI.matrix = matrixBackup;
+
+                // Draw Markers
+                foreach (var markerType in closestMarkerTextures.Keys) //For each marker registered by update
+                {
+                    if (markerVisibility[markerType]) //if is valid
                     {
-                        // Calculate to vanish gradually
-                        float alpha = 1.0f;
-                        if (distanceToPlayer < fadeDistance) //Distance to fade
+                        Vector3 markerPosition = closestMarkerPositions[markerType]; //define position
+                        float distanceToPlayer = Vector3.Distance(player.position, markerPosition); //diference to player position
+
+                        if (distanceToPlayer > minDistanceToHideMarker) //if is to close, do not render
                         {
-                            float t = (distanceToPlayer - minDistanceToHideMarker) / (fadeDistance - minDistanceToHideMarker); //an equation to calculate gradually the vanish when the player is closer
-                            alpha = Mathf.Pow(t, 3); // Cubic interpolation
-                        }
+                            // Calculate to vanish gradually
+                            float alpha = 1.0f;
+                            if (distanceToPlayer < fadeDistance) //Distance to fade
+                            {
+                                float t = (distanceToPlayer - minDistanceToHideMarker) / (fadeDistance - minDistanceToHideMarker); //an equation to calculate gradually the vanish when the player is closer
+                                alpha = Mathf.Pow(t, 3); // Cubic interpolation
+                            }
 
 
-                        GUI.color = new Color(GUI.color.r, GUI.color.g, GUI.color.b, alpha);// Move the alpha with the formula
+                            GUI.color = new Color(GUI.color.r, GUI.color.g, GUI.color.b, alpha);// Move the alpha with the formula
 
-                        if (allowRotationMap == true)
-                        {
-                            rotationMarker(markerRect, closestMarkerTextures[markerType], closestMarkerRotations[markerType], matrixBackup); //Move markers
-                        }
-                        else
-                        {
+                            if (allowRotationMap == true)
+                            {
+                                rotationMarker(markerRect, closestMarkerTextures[markerType], closestMarkerRotations[markerType], matrixBackup); //Move markers
+                            }
+                            else
+                            {
 
-                            Vector3 directionToMarker = markerPosition - player.position; // Check direction of each marker
-                            float angleToMarker = Mathf.Atan2(directionToMarker.x, directionToMarker.z) * Mathf.Rad2Deg;// Check angle of each marker
+                                Vector3 directionToMarker = markerPosition - player.position; // Check direction of each marker
+                                float angleToMarker = Mathf.Atan2(directionToMarker.x, directionToMarker.z) * Mathf.Rad2Deg;// Check angle of each marker
 
-                            // Rotate the markers
-                            GUIUtility.RotateAroundPivot(angleToMarker, minimapRect.center);
-                            GUI.DrawTexture(markerRect, closestMarkerTextures[markerType], ScaleMode.StretchToFill);
+                                // Rotate the markers
+                                GUIUtility.RotateAroundPivot(angleToMarker, minimapRect.center);
+                                GUI.DrawTexture(markerRect, closestMarkerTextures[markerType], ScaleMode.StretchToFill);
 
-                            // Restore Matrix
-                            GUI.matrix = matrixBackup;
+                                // Restore Matrix
+                                GUI.matrix = matrixBackup;
+                            }
                         }
                     }
                 }
+
+                GUI.depth = -1 + depthModifier; //Draw compass over
+
+                GUI.color = originalColor; //Restore color
+
+                if (allowCompass)
+                {
+                    rotationMarker(compassRect, compassTexture, compassRotation, matrixBackup); //Draw compass
+                }
+
+                //To draw map under
+                GUI.depth = 0 + depthModifier;
+                // Restore matrix
+                GUI.matrix = matrixBackup;
             }
-
-            GUI.depth = -1 + depthModifier; //Draw compass over
-
-            GUI.color = originalColor; //Restore color
-
-            if (allowCompass)
-            {
-                rotationMarker(compassRect, compassTexture, compassRotation, matrixBackup); //Draw compass
-            }
-
-            //To draw map under
-            GUI.depth = 0 + depthModifier;
-            // Restore matrix
-            GUI.matrix = matrixBackup;
         }
     }
 
