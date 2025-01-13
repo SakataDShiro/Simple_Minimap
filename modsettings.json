@@ -84,6 +84,13 @@
                     "Description": "Replaces the in-game compass with a compass integrated into the minimap",
                     "$version": "v1",
                     "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey"
+                },
+                {
+                    "Value": "J",
+                    "Name": "KeyInput",
+                    "Description": "You can decide whether or not to display the map by pressing the key. For any use that requires clearing the screen",
+                    "$version": "v1",
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.TextKey"
                 }
             ],
             "$version": "v1"
