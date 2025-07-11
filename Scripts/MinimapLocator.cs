@@ -26,7 +26,7 @@ namespace MinimapLocatorMod
         public int textureSize = 128; // Base Size of marker
         public int markerScale; //Variable to move the size of the marker
         public float markerBorder; //Variable to move the border size
-
+        private GameObject markersContainer;
         private List<GameObject> createdMarkers = new List<GameObject>(); // References of created markers
 
 
@@ -200,8 +200,21 @@ namespace MinimapLocatorMod
 
         private void Start()
         {
+            CreateMarkersContainer();
             AdjustUpdateInterval(updateFrequency);
             UpdateMarkers(); //Update the markers
+        }
+        void CreateMarkersContainer()
+        {
+            markersContainer = GameObject.Find("MinimapMarkersContainer");
+            if (markersContainer == null)
+            {
+                markersContainer = new GameObject("MinimapMarkersContainer");
+            }
+
+            //SetLayer
+            int skyLayer = LayerMask.NameToLayer("SkyLayer");
+            if (skyLayer != -1) markersContainer.layer = skyLayer;
         }
 
         void UpdateMarkers()
@@ -287,23 +300,38 @@ namespace MinimapLocatorMod
         void ReinitializeCityData()
         {
             buildingLocations.Clear(); // Clear previous data
+
+            if (GameManager.Instance.StreamingWorld == null)
+            {
+                blockArray = null;
+                buildingDirectory = null;
+                return;
+            }
+
             if (GameManager.Instance.StreamingWorld.CurrentPlayerLocationObject != null) //check the current location
             {
                 blockArray = GameManager.Instance.StreamingWorld.CurrentPlayerLocationObject.GetComponentsInChildren<DaggerfallRMBBlock>(); //New block
                 buildingDirectory = GameManager.Instance.StreamingWorld.CurrentPlayerLocationObject.GetComponentInChildren<BuildingDirectory>(); //new buildings
-                Debug.Log("DATA LOADED");
+              //  Debug.Log("DATA LOADED");
             }
             else
             {
                 blockArray = null;
                 buildingDirectory = null;
-                Debug.Log("NO DATA");
+            //    Debug.Log("NO DATA");
             }
         }
 
 
         void LocateBuildings(DFLocation.BuildingTypes buildingType, Color buildingColor)
         {
+            if (blockArray == null || buildingDirectory == null || markersContainer == null)
+            {
+                Debug.Log("Components not initializated");
+                return;
+            }
+
+
             if (blockArray != null && buildingDirectory != null) //if is valid the info
             {
                 foreach (DaggerfallRMBBlock block in blockArray) //for each block
@@ -361,7 +389,7 @@ namespace MinimapLocatorMod
                 {
                     Vector3 buildingPosition = block.transform.position + buildingSummary.Position;
                     buildingLocations.Add(buildingPosition); //add to the list of buildings checked
-                    Debug.Log(buildingType + " found at: " + buildingPosition);
+                 //   Debug.Log(buildingType + " found at: " + buildingPosition);
                 }
             }
         }
@@ -375,6 +403,9 @@ namespace MinimapLocatorMod
                 float markerHeight = position.y + 40;
 
                 GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Quad); //create a marker
+                marker.transform.SetParent(markersContainer.transform); //container child
+                marker.layer = markersContainer.layer;
+                Destroy(marker.GetComponent<Collider>()); // Remove collider
                 marker.transform.position = new Vector3(position.x, markerHeight, position.z); // Locate the marker over the building
                 marker.transform.localScale = new Vector3(markerScale, markerScale, markerScale); // Adjust the size of the marker
                 marker.transform.rotation = Quaternion.Euler(90, 0, 0); // The marker always facing up
@@ -388,11 +419,12 @@ namespace MinimapLocatorMod
 
         void ClearMarkers()
         {
-            foreach (GameObject marker in createdMarkers) //Eliminate marker created
+            if (markersContainer == null) return;
+            foreach (Transform child in markersContainer.transform) //Destroy container childs
             {
-                Destroy(marker);
+                Destroy(child.gameObject);
             }
-            createdMarkers.Clear(); // Clean list of markers
+            createdMarkers.Clear();
         }
 
         Texture2D CreateCircleTexture(int size, Color circleColor, Color backgroundColor)
@@ -441,10 +473,14 @@ namespace MinimapLocatorMod
         void UpdateLocator()
         {
             PlayerGPS playerGPS = GameManager.Instance.PlayerGPS;
+      
+            if (GameManager.Instance == null ||
+           GameManager.Instance.PlayerGPS == null ||
+           GameManager.Instance.PlayerEntity == null)
+            return;
+
             bool isInsideBuilding = GameManager.Instance.IsPlayerInside;
             bool isResting = GameManager.Instance.PlayerEntity.IsResting;
-
-            
 
             // Update if when player is resting
             if (isResting != wasResting)

@@ -445,25 +445,26 @@ public class Minimap_Mod : MonoBehaviour
 
     public void FindNearMarker()
     {
+        if (player == null) return;
         closestMarkerTextures.Clear(); //Clean the texture
         closestMarkerPositions.Clear(); //Clean the position
-
+                                        
+        GameObject markersContainer = GameObject.Find("MinimapMarkersContainer"); //Search container
+        if (markersContainer == null) return;
         foreach (var markerType in markerVisibility.Keys) //For each on dictionary read visibility
         {
             if (!markerVisibility[markerType])
                 continue;
 
-            GameObject closestMarker = null;
+            Transform closestMarker = null;
             float closestDistanceSqr = Mathf.Infinity; //A infinite float distance
             Vector3 playerPosition = player.position; 
 
-            GameObject[] markers = GameObject.FindObjectsOfType<GameObject>();
-
-            foreach (GameObject marker in markers) //when find all gameObjects
+            foreach (Transform marker in markersContainer.transform) //when find all gameObjects inside
             {
-                if (marker.name.Contains(markerType) && marker.name.EndsWith("_Marker")) //filter the ones with the name 
+                if (marker.name.Contains(markerType)) 
                 {
-                    Vector3 directionToMarker = marker.transform.position - playerPosition; //If is right, check his diference with player
+                    Vector3 directionToMarker = marker.position - playerPosition; //If is right, check his diference with player
                     float dSqrToMarker = directionToMarker.sqrMagnitude; //magnitude of distance, the size of the vector
 
                     if (dSqrToMarker < closestDistanceSqr) //Check if distance is lower than the lower distance registered
@@ -476,20 +477,20 @@ public class Minimap_Mod : MonoBehaviour
 
             if (closestMarker != null)
             {
-                Debug.Log($"{markerType} found at: {closestMarker.transform.position}");
+              //  Debug.Log($"{markerType} found at: {closestMarker.transform.position}");
 
-                Renderer markerRenderer = closestMarker.GetComponent<Renderer>();
+                Renderer markerRenderer = closestMarker.GetComponentInChildren<Renderer>();
                 if (markerRenderer != null && markerRenderer.material != null)
                 {
                     Texture2D markerTexture = markerRenderer.material.mainTexture as Texture2D;
                     if (markerTexture != null)
                     {
                         closestMarkerTextures[markerType] = markerTexture;
-                        Debug.Log($"Texture of {markerType} marker: {markerTexture.name}");
+                  //      Debug.Log($"Texture of {markerType} marker: {markerTexture.name}");
                     }
                     else
                     {
-                        Debug.Log($"No Texture2D found on the marker's material.");
+                       Debug.Log($"No Texture2D found on the marker's material.");
                     }
                 }
                 else
@@ -501,7 +502,7 @@ public class Minimap_Mod : MonoBehaviour
             }
             else
             {
-                Debug.Log($"No markers of type {markerType} found.");
+               // Debug.Log($"No markers of type {markerType} found.");
             }
         }
     }
@@ -519,7 +520,7 @@ public class Minimap_Mod : MonoBehaviour
 
         miniMapCamera.orthographic = true;
         miniMapCamera.orthographicSize = 50; // Default ortographicSize
-        miniMapCamera.cullingMask = LayerMask.GetMask("Default"); // SetMask
+        miniMapCamera.cullingMask = -1; // Everything to detect the skylayer mask (locators)
         
         miniMapCamera.clearFlags = CameraClearFlags.SolidColor; //Set Solid Background
         miniMapCamera.backgroundColor = Color.black;//Set Black Background
@@ -560,6 +561,8 @@ public class Minimap_Mod : MonoBehaviour
 
     void UpdateMinimap()
     {
+        if (player == null || playerEnterExit == null || miniMapCamera == null)
+            return;
         Vector3 newPosition = player.position;
         newPosition.y += height;
         miniMapCamera.transform.position = newPosition;
@@ -670,6 +673,11 @@ public class Minimap_Mod : MonoBehaviour
 
     void OnGUI()
     {
+        if (miniMapCamera == null ||
+       miniMapCamera.targetTexture == null ||
+       arrowTexture == null ||
+       compassTexture == null)
+            return;
         GUI.depth = 0 + depthModifier; //To initial Markers
 
         Matrix4x4 matrixBackup = GUI.matrix;
